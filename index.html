@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Control de asistencia</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Control de asistencia</h1>
+    <p class="subtitle">Ingresá con tu DNI y contraseña/PIN.</p>
+
+    <form id="loginForm">
+      <label for="loginDni">DNI</label>
+      <input id="loginDni" inputmode="numeric" autocomplete="username" required>
+
+      <label for="loginPassword">Contraseña / PIN</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" required>
+
+      <button type="submit">Ingresar</button>
+    </form>
+
+    <p id="mensaje" class="mensaje"></p>
+    <a class="link" href="registro.html">Primera vez: crear cuenta</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

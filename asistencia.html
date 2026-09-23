@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mi asistencia</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Hola, <span id="nombre">...</span></h1>
+    <p class="subtitle"><span id="grado">...</span> · Registro diario de asistencia.</p>
+
+    <div id="bloqueTurno" class="turno-box">
+      <label for="selectorTurno">¿Qué turno hacés hoy?</label>
+      <select id="selectorTurno">
+        <option value="">Seleccionar...</option>
+        <option value="MANANA">Mañana</option>
+        <option value="TARDE">Tarde</option>
+      </select>
+    </div>
+
+    <section class="estado-grid">
+      <div class="estado-item">
+        <span>Turno de hoy</span>
+        <strong id="turnoActual">-</strong>
+      </div>
+
+      <div class="estado-item">
+        <span>Entrada de hoy</span>
+        <strong id="entrada">-</strong>
+      </div>
+
+      <div class="estado-item">
+        <span>Salida de hoy</span>
+        <strong id="salida">-</strong>
+      </div>
+    </section>
+
+    <button id="accionBtn">Cargando...</button>
+    <p id="estadoMsg" class="mensaje"></p>
+
+    <button id="logoutBtn" class="secondary">Cerrar sesión</button>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/asistencia.js"></script>
+</body>
+</html>

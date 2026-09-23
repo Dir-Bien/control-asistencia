@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Registro inicial</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Registro inicial</h1>
+
+    <p class="notice">
+      La clave inicial es: las primeras 3 letras de tu apellido + los últimos 3 números de tu DNI.
+      Ejemplo: PEREZ + DNI terminado en 678 → PER678.
+    </p>
+
+    <form id="registroForm">
+      <label for="registroDni">DNI</label>
+      <input id="registroDni" inputmode="numeric" required>
+
+      <label for="claveInicial">Clave inicial</label>
+      <input id="claveInicial" autocomplete="one-time-code" required>
+
+      <label for="registroPassword">Creá tu contraseña/PIN</label>
+      <input id="registroPassword" type="password" minlength="6" required>
+
+      <label for="repetirPassword">Repetir contraseña/PIN</label>
+      <input id="repetirPassword" type="password" minlength="6" required>
+
+      <button type="submit">Crear cuenta</button>
+    </form>
+
+    <p id="mensaje" class="mensaje"></p>
+    <a class="link" href="index.html">Volver al ingreso</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
