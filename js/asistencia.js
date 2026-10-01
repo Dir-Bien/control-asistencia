@@ -1,199 +1,698 @@
-const nombreEl = document.getElementById("nombre");
-const gradoEl = document.getElementById("grado");
-const turnoActualEl = document.getElementById("turnoActual");
-const entradaEl = document.getElementById("entrada");
-const salidaEl = document.getElementById("salida");
-const bloqueTurno = document.getElementById("bloqueTurno");
-const selectorTurno = document.getElementById("selectorTurno");
-const accionBtn = document.getElementById("accionBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const estadoMsg = document.getElementById("estadoMsg");
+const nombreEl =
+    document.getElementById("nombre");
+
+const gradoEl =
+    document.getElementById("grado");
+
+const departamentoEl =
+    document.getElementById("departamento");
+
+const fechaEl =
+    document.getElementById("fecha");
+
+const turnoEl =
+    document.getElementById("turno");
+
+const entradaEl =
+    document.getElementById("entrada");
+
+const salidaEl =
+    document.getElementById("salida");
+
+const egresoBtn =
+    document.getElementById("egresoBtn");
+
+const mensajeEl =
+    document.getElementById("mensaje");
+
 
 let estadoActual = null;
-let recordatorioTimer = null;
-let ultimaNotificacion = "";
 
-function mostrarEstado(texto, error = false) {
-  estadoMsg.textContent = texto;
-  estadoMsg.className = error ? "mensaje error" : "mensaje ok";
+let intervaloNotificacion = null;
+
+
+// ==========================================================
+// MENSAJES
+// ==========================================================
+
+function mostrarMensaje(
+    texto,
+    error = false
+) {
+
+    mensajeEl.textContent =
+        texto;
+
+    mensajeEl.className =
+        error
+            ? "mensaje error"
+            : "mensaje ok";
 }
 
-function horaArgentina(fechaIso) {
-  if (!fechaIso) return "-";
 
-  return new Intl.DateTimeFormat("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).format(new Date(fechaIso));
-}
+// ==========================================================
+// FORMATO HORA
+// ==========================================================
 
-async function verificarSesion() {
-  const { data } = await sb.auth.getSession();
+function horaArgentina(fecha) {
 
-  if (!data.session) {
-    location.href = "index.html";
-    return false;
-  }
+    if (!fecha) {
 
-  return true;
-}
+        return "-";
 
-async function cargarEstado() {
-  if (!(await verificarSesion())) return;
-
-  const { data, error } = await sb.rpc("mi_estado");
-
-  if (error) {
-    mostrarEstado(error.message, true);
-    return;
-  }
-
-  estadoActual = data;
-
-  nombreEl.textContent = `${data.apellido} ${data.nombre}`;
-  gradoEl.textContent = data.grado || "-";
-
-  if (!data.entrada) {
-    bloqueTurno.hidden = false;
-    turnoActualEl.textContent = "Elegir al registrar";
-    entradaEl.textContent = "-";
-    salidaEl.textContent = "-";
-    accionBtn.textContent = "Registrar entrada";
-    accionBtn.disabled = false;
-  } else {
-    bloqueTurno.hidden = true;
-    turnoActualEl.textContent = data.turno === "MANANA" ? "Mañana" : "Tarde";
-    entradaEl.textContent = horaArgentina(data.entrada);
-    salidaEl.textContent = horaArgentina(data.salida);
-
-    if (!data.salida) {
-      accionBtn.textContent = "Registrar salida";
-      accionBtn.disabled = false;
-    } else {
-      accionBtn.textContent = "Jornada registrada";
-      accionBtn.disabled = true;
     }
-  }
 
-  programarRecordatorio();
+    return new Intl.DateTimeFormat(
+        "es-AR",
+        {
+
+            hour:
+                "2-digit",
+
+            minute:
+                "2-digit",
+
+            second:
+                "2-digit",
+
+            timeZone:
+                "America/Argentina/Buenos_Aires"
+
+        }
+    ).format(
+        new Date(fecha)
+    );
+
 }
 
-async function registrarEntrada() {
-  const turno = selectorTurno.value;
 
-  if (!turno) {
-    mostrarEstado("Seleccioná el turno de hoy.", true);
-    return;
-  }
+// ==========================================================
+// CARGAR ESTADO
+// ==========================================================
 
-  accionBtn.disabled = true;
-  mostrarEstado("Obteniendo ubicación...");
+async function obtenerEstado() {
 
-  try {
-    const geo = await obtenerUbicacion();
+    const token =
+        obtenerTokenSesion();
 
-    const { error } = await sb.rpc("registrar_entrada", {
-      p_turno: turno,
-      p_latitud: geo.latitud,
-      p_longitud: geo.longitud,
-      p_precision: geo.precision,
-      p_device_id: obtenerDeviceId(),
-    });
 
-    if (error) throw error;
+    if (!token) {
 
-    mostrarEstado("Entrada registrada correctamente.");
-    await cargarEstado();
-  } catch (e) {
-    mostrarEstado(e.message || "No se pudo registrar la entrada.", true);
-    accionBtn.disabled = false;
-  }
+        window.location.replace(
+            "index.html"
+        );
+
+        return null;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "mi_estado_seguro",
+            {
+
+                p_token:
+                    token,
+
+                p_device_id:
+                    obtenerDeviceId()
+
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            error
+        );
+
+        throw new Error(
+            "No se pudo obtener tu información."
+        );
+
+    }
+
+
+    if (!data?.ok) {
+
+        throw new Error(
+            data?.error ||
+            "La sesión no es válida."
+        );
+
+    }
+
+
+    return data;
+
 }
 
-async function registrarSalida() {
-  accionBtn.disabled = true;
-  mostrarEstado("Obteniendo ubicación...");
 
-  try {
-    const geo = await obtenerUbicacion();
+// ==========================================================
+// REGISTRAR ENTRADA AUTOMÁTICAMENTE
+// ==========================================================
 
-    const { error } = await sb.rpc("registrar_salida", {
-      p_latitud: geo.latitud,
-      p_longitud: geo.longitud,
-      p_precision: geo.precision,
-      p_device_id: obtenerDeviceId(),
-    });
+async function registrarEntradaAutomatica() {
 
-    if (error) throw error;
+    mostrarMensaje(
+        "Verificando ubicación..."
+    );
 
-    mostrarEstado("Salida registrada correctamente.");
-    await cargarEstado();
-  } catch (e) {
-    mostrarEstado(e.message || "No se pudo registrar la salida.", true);
-    accionBtn.disabled = false;
-  }
+
+    const ubicacion =
+        await obtenerUbicacion();
+
+
+    mostrarMensaje(
+        "Registrando ingreso..."
+    );
+
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "registrar_entrada_automatica_segura",
+            {
+
+                p_token:
+                    obtenerTokenSesion(),
+
+                p_device_id:
+                    obtenerDeviceId(),
+
+                p_latitud:
+                    ubicacion.latitud,
+
+                p_longitud:
+                    ubicacion.longitud,
+
+                p_precision:
+                    ubicacion.precision
+
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            error
+        );
+
+        throw new Error(
+            "No se pudo registrar el ingreso."
+        );
+
+    }
+
+
+    if (!data?.ok) {
+
+        throw new Error(
+            data?.error ||
+            "No se pudo registrar el ingreso."
+        );
+
+    }
+
+
+    return data;
+
 }
 
-accionBtn.addEventListener("click", async () => {
-  if (!estadoActual?.entrada) {
-    await registrarEntrada();
-  } else if (!estadoActual?.salida) {
-    await registrarSalida();
-  }
-});
 
-logoutBtn.addEventListener("click", async () => {
-  await sb.auth.signOut();
-  location.href = "index.html";
-});
+// ==========================================================
+// MOSTRAR ESTADO
+// ==========================================================
 
-async function pedirPermisoNotificaciones() {
-  if (!("Notification" in window)) return;
+function mostrarEstado(data) {
 
-  if (Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
+    estadoActual =
+        data;
+
+
+    nombreEl.textContent =
+        `${data.apellido}, ${data.nombre}`;
+
+
+    gradoEl.textContent =
+        data.grado || "-";
+
+
+    departamentoEl.textContent =
+        data.departamento
+        || "Sin asignar";
+
+
+    fechaEl.textContent =
+        data.fecha || "-";
+
+
+    turnoEl.textContent =
+        data.turno === "MANANA"
+            ? "Mañana"
+            : "Tarde";
+
+
+    entradaEl.textContent =
+        horaArgentina(
+            data.entrada
+        );
+
+
+    salidaEl.textContent =
+        horaArgentina(
+            data.salida
+        );
+
+
+    // ======================================================
+    // YA EGRESÓ
+    // ======================================================
+
+    if (data.salida) {
+
+        egresoBtn.textContent =
+            "Jornada registrada";
+
+        egresoBtn.disabled =
+            true;
+
+        mostrarMensaje(
+            "Ingreso y egreso registrados."
+        );
+
+        return;
+
+    }
+
+
+    // ======================================================
+    // PUEDE REGISTRAR EGRESO
+    // ======================================================
+
+    egresoBtn.textContent =
+        "Registrar egreso";
+
+    egresoBtn.disabled =
+        false;
+
+
+    programarRecordatorio();
+
 }
 
-function horaMinutoArgentina() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "America/Argentina/Buenos_Aires",
-  }).formatToParts(new Date());
 
-  return {
-    hora: Number(parts.find(p => p.type === "hour")?.value ?? 0),
-    minuto: Number(parts.find(p => p.type === "minute")?.value ?? 0),
-  };
+// ==========================================================
+// INICIO
+// ==========================================================
+
+async function iniciar() {
+
+    egresoBtn.disabled =
+        true;
+
+    egresoBtn.textContent =
+        "Cargando...";
+
+
+    try {
+
+        let estado =
+            await obtenerEstado();
+
+
+        if (!estado) {
+
+            return;
+
+        }
+
+
+        // Si todavía no tiene entrada de hoy,
+        // se registra automáticamente.
+
+        if (!estado.entrada) {
+
+            await registrarEntradaAutomatica();
+
+
+            estado =
+                await obtenerEstado();
+
+
+            mostrarMensaje(
+                "Ingreso registrado correctamente."
+            );
+
+        }
+
+
+        mostrarEstado(
+            estado
+        );
+
+
+        await solicitarNotificaciones();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        mostrarMensaje(
+            error.message,
+            true
+        );
+
+
+        egresoBtn.textContent =
+            "No se registró el ingreso";
+
+        egresoBtn.disabled =
+            true;
+
+    }
+
 }
+
+
+// ==========================================================
+// REGISTRAR EGRESO
+// ==========================================================
+
+egresoBtn.addEventListener(
+    "click",
+    async () => {
+
+        if (
+            !estadoActual
+            ||
+            estadoActual.salida
+        ) {
+
+            return;
+
+        }
+
+
+        egresoBtn.disabled =
+            true;
+
+
+        mostrarMensaje(
+            "Registrando egreso..."
+        );
+
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await sb.rpc(
+                    "registrar_salida_segura",
+                    {
+
+                        p_token:
+                            obtenerTokenSesion(),
+
+                        p_device_id:
+                            obtenerDeviceId()
+
+                    }
+                );
+
+
+            if (error) {
+
+                console.error(
+                    error
+                );
+
+                throw new Error(
+                    "No se pudo registrar el egreso."
+                );
+
+            }
+
+
+            if (!data?.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    "No se pudo registrar el egreso."
+                );
+
+            }
+
+
+            mostrarMensaje(
+                "Egreso registrado correctamente."
+            );
+
+
+            const estado =
+                await obtenerEstado();
+
+
+            mostrarEstado(
+                estado
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            mostrarMensaje(
+                error.message,
+                true
+            );
+
+
+            egresoBtn.disabled =
+                false;
+
+        }
+
+    }
+);
+
+
+// ==========================================================
+// NOTIFICACIONES
+// ==========================================================
+
+async function solicitarNotificaciones() {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        Notification.permission
+        === "default"
+    ) {
+
+        try {
+
+            await Notification
+                .requestPermission();
+
+        } catch (error) {
+
+            console.log(
+                error
+            );
+
+        }
+
+    }
+
+}
+
+
+// ==========================================================
+// RECORDATORIO DE EGRESO
+// ==========================================================
 
 function programarRecordatorio() {
-  if (recordatorioTimer) clearInterval(recordatorioTimer);
 
-  if (!estadoActual?.entrada || estadoActual?.salida || !estadoActual?.turno) return;
+    if (
+        intervaloNotificacion
+    ) {
 
-  recordatorioTimer = setInterval(() => {
-    const { hora, minuto } = horaMinutoArgentina();
-    const objetivo = estadoActual.turno === "MANANA" ? 13 : 18;
-    const clave = `${estadoActual.fecha}-${objetivo}`;
+        clearInterval(
+            intervaloNotificacion
+        );
 
-    if (hora === objetivo && minuto <= 10 && ultimaNotificacion !== clave) {
-      ultimaNotificacion = clave;
-
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Registrar salida", {
-          body: "Recordá registrar tu salida antes de retirarte.",
-        });
-      }
-
-      mostrarEstado("Recordatorio: ya podés registrar tu salida.");
     }
-  }, 60000);
+
+
+    if (
+        !estadoActual?.entrada
+        ||
+        estadoActual?.salida
+    ) {
+
+        return;
+
+    }
+
+
+    intervaloNotificacion =
+        setInterval(
+            revisarRecordatorio,
+            30000
+        );
+
+
+    revisarRecordatorio();
+
 }
 
-pedirPermisoNotificaciones();
-cargarEstado();
+
+function revisarRecordatorio() {
+
+    if (
+        !estadoActual
+        ||
+        estadoActual.salida
+    ) {
+
+        return;
+
+    }
+
+
+    const partes =
+        new Intl.DateTimeFormat(
+            "en-US",
+            {
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit",
+
+                hour12:
+                    false,
+
+                timeZone:
+                    "America/Argentina/Buenos_Aires"
+
+            }
+        ).formatToParts(
+            new Date()
+        );
+
+
+    const hora =
+        Number(
+            partes.find(
+                p =>
+                    p.type === "hour"
+            )?.value
+        );
+
+
+    const minuto =
+        Number(
+            partes.find(
+                p =>
+                    p.type === "minute"
+            )?.value
+        );
+
+
+    const objetivo =
+        estadoActual.turno === "MANANA"
+            ? 13
+            : 18;
+
+
+    if (
+        hora !== objetivo
+        ||
+        minuto > 5
+    ) {
+
+        return;
+
+    }
+
+
+    const clave =
+        `notificacion-${estadoActual.fecha}-${objetivo}`;
+
+
+    if (
+        localStorage.getItem(
+            clave
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    localStorage.setItem(
+        clave,
+        "1"
+    );
+
+
+    mostrarMensaje(
+        "No olvides registrar egreso."
+    );
+
+
+    if (
+        "Notification" in window
+        &&
+        Notification.permission
+        === "granted"
+    ) {
+
+        new Notification(
+            "Control de asistencia",
+            {
+
+                body:
+                    "No olvides registrar egreso."
+
+            }
+        );
+
+    }
+
+}
+
+
+// ==========================================================
+// INICIAR
+// ==========================================================
+
+iniciar();
