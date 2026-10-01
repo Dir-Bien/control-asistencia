@@ -1,90 +1,316 @@
-const loginForm = document.getElementById("loginForm");
-const registroForm = document.getElementById("registroForm");
-const mensaje = document.getElementById("mensaje");
+const formulario =
+    document.getElementById("loginForm");
+
+const inputDni =
+    document.getElementById("dni");
+
+const inputPassword =
+    document.getElementById("password");
+
+const mensajeEl =
+    document.getElementById("mensaje");
+
+const boton =
+    document.getElementById("loginBtn");
+
 
 function mostrarMensaje(texto, error = false) {
-  mensaje.textContent = texto;
-  mensaje.className = error ? "mensaje error" : "mensaje ok";
+
+    mensajeEl.textContent = texto;
+
+    mensajeEl.className =
+        error
+            ? "mensaje error"
+            : "mensaje ok";
 }
 
-if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
 
-    const dni = document.getElementById("loginDni").value.replace(/\D/g, "");
-    const password = document.getElementById("loginPassword").value;
+async function comprobarSesion() {
 
-    mostrarMensaje("Ingresando...");
+    try {
 
-    const { error } = await sb.auth.signInWithPassword({
-      email: emailTecnicoDesdeDni(dni),
-      password,
-    });
+        const token =
+            obtenerTokenSesion();
 
-    if (error) {
-      mostrarMensaje("DNI o contraseña incorrectos.", true);
-      return;
+        if (!token) {
+            return;
+        }
+
+        const device =
+            obtenerDeviceId();
+
+        const {
+            data,
+            error
+        } = await sb.rpc(
+            "mi_estado_seguro",
+            {
+                p_token: token,
+                p_device_id: device
+            }
+        );
+
+
+        if (error) {
+
+            console.error(
+                "Error comprobando sesión:",
+                error
+            );
+
+            return;
+        }
+
+
+        if (data?.ok) {
+
+            window.location.replace(
+                "asistencia.html"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Error comprobando sesión:",
+            error
+        );
+
     }
 
-    location.href = "asistencia.html";
-  });
 }
 
-if (registroForm) {
-  registroForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
 
-    const dni = document.getElementById("registroDni").value.replace(/\D/g, "");
-    const claveInicial = document.getElementById("claveInicial").value.trim();
-    const password = document.getElementById("registroPassword").value;
-    const repetir = document.getElementById("repetirPassword").value;
+formulario.addEventListener(
+    "submit",
+    async (event) => {
 
-    if (password !== repetir) {
-      mostrarMensaje("Las contraseñas no coinciden.", true);
-      return;
+        event.preventDefault();
+
+
+        // ===============================
+        // VALIDAR HTML
+        // ===============================
+
+        if (
+            !inputDni ||
+            !inputPassword
+        ) {
+
+            mostrarMensaje(
+                "Error interno: no se encontraron los campos del formulario.",
+                true
+            );
+
+            return;
+        }
+
+
+        // ===============================
+        // DNI
+        // ===============================
+
+        const dni =
+            inputDni.value.replace(
+                /\D/g,
+                ""
+            );
+
+
+        if (
+            dni.length < 7 ||
+            dni.length > 9
+        ) {
+
+            mostrarMensaje(
+                "Ingresá un DNI válido.",
+                true
+            );
+
+            return;
+        }
+
+
+        // ===============================
+        // CONTRASEÑA
+        // ===============================
+
+        const password =
+            inputPassword.value.trim();
+
+
+        if (!password) {
+
+            mostrarMensaje(
+                "Ingresá tu contraseña.",
+                true
+            );
+
+            return;
+        }
+
+
+        boton.disabled = true;
+
+        boton.textContent =
+            "Verificando...";
+
+
+        try {
+
+            // ===============================
+            // UBICACIÓN
+            // ===============================
+
+            mostrarMensaje(
+                "Obteniendo ubicación..."
+            );
+
+
+            let ubicacion;
+
+
+            try {
+
+                ubicacion =
+                    await obtenerUbicacion();
+
+            } catch (error) {
+
+                throw new Error(
+                    error.message ||
+                    "No se pudo obtener tu ubicación."
+                );
+
+            }
+
+
+            if (
+                ubicacion.precision > 200
+            ) {
+
+                throw new Error(
+                    "La ubicación del teléfono no es suficientemente precisa. Probá acercarte a una ventana o activar el GPS."
+                );
+
+            }
+
+
+            // ===============================
+            // LOGIN
+            // ===============================
+
+            mostrarMensaje(
+                "Verificando datos..."
+            );
+
+
+            const {
+                data,
+                error
+            } = await sb.rpc(
+                "login_empleado",
+                {
+
+                    p_dni:
+                        dni,
+
+                    p_password:
+                        password,
+
+                    p_device_id:
+                        obtenerDeviceId(),
+
+                    p_latitud:
+                        ubicacion.latitud,
+
+                    p_longitud:
+                        ubicacion.longitud,
+
+                    p_precision:
+                        ubicacion.precision
+
+                }
+            );
+
+
+            // ===============================
+            // ERROR SUPABASE
+            // ===============================
+
+            if (error) {
+
+                console.error(
+                    "Error Supabase:",
+                    error
+                );
+
+                throw new Error(
+                    "No se pudo comunicar con el sistema. Intentá nuevamente."
+                );
+
+            }
+
+
+            // ===============================
+            // ERROR CONTROLADO POR NOSOTROS
+            // ===============================
+
+            if (!data?.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    "No se pudo iniciar sesión."
+                );
+
+            }
+
+
+            // ===============================
+            // LOGIN CORRECTO
+            // ===============================
+
+            guardarTokenSesion(
+                data.token
+            );
+
+
+            mostrarMensaje(
+                "Ingreso correcto."
+            );
+
+
+            window.location.replace(
+                "asistencia.html"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Error login:",
+                error
+            );
+
+
+            mostrarMensaje(
+                error.message ||
+                "No se pudo iniciar sesión.",
+                true
+            );
+
+
+            boton.disabled =
+                false;
+
+            boton.textContent =
+                "Ingresar";
+
+        }
+
     }
+);
 
-    if (password.length < 6) {
-      mostrarMensaje("Usá al menos 6 caracteres o números.", true);
-      return;
-    }
 
-    mostrarMensaje("Creando cuenta...");
-
-    const { data, error } = await sb.functions.invoke("registrar-empleado", {
-      body: {
-        dni,
-        clave_inicial: claveInicial,
-        password,
-        device_id: obtenerDeviceId(),
-      },
-    });
-
-    if (error) {
-      let texto = "No se pudo crear la cuenta.";
-      try {
-        const detalle = await error.context.json();
-        texto = detalle.error || texto;
-      } catch (_) {}
-      mostrarMensaje(texto, true);
-      return;
-    }
-
-    if (!data?.ok) {
-      mostrarMensaje(data?.error || "No se pudo crear la cuenta.", true);
-      return;
-    }
-
-    const login = await sb.auth.signInWithPassword({
-      email: emailTecnicoDesdeDni(dni),
-      password,
-    });
-
-    if (login.error) {
-      mostrarMensaje("Cuenta creada. Ahora iniciá sesión.");
-      return;
-    }
-
-    location.href = "asistencia.html";
-  });
-}
+comprobarSesion();
