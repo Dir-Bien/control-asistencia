@@ -11,14 +11,9 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>
-        Mi Asistencia
-    </title>
+    <title>Control de Asistencia</title>
 
-    <link
-        rel="icon"
-        href="data:,"
-    >
+    <link rel="icon" href="data:,">
 
     <link
         rel="stylesheet"
@@ -31,18 +26,20 @@
 
 <main class="card">
 
-
     <div class="logo">
         CONTROL DE ASISTENCIA
     </div>
 
 
     <h1 id="nombre">
-        ...
+        Cargando...
     </h1>
 
 
-    <p id="grado" class="subtitle">
+    <p
+        id="grado"
+        class="subtitle"
+    >
         ...
     </p>
 
@@ -82,7 +79,7 @@
                 Turno
             </span>
 
-            <strong id="turnoActual">
+            <strong id="turno">
                 -
             </strong>
 
@@ -92,7 +89,7 @@
         <div class="dato">
 
             <span>
-                Entrada
+                Ingreso
             </span>
 
             <strong id="entrada">
@@ -105,7 +102,7 @@
         <div class="dato">
 
             <span>
-                Salida
+                Egreso
             </span>
 
             <strong id="salida">
@@ -114,39 +111,14 @@
 
         </div>
 
+
     </div>
 
 
-    <div
-        id="seleccionTurno"
-        class="turno-box"
+    <button
+        id="egresoBtn"
+        disabled
     >
-
-        <label for="turno">
-            ¿Qué turno hacés hoy?
-        </label>
-
-
-        <select id="turno">
-
-            <option value="">
-                Seleccionar
-            </option>
-
-            <option value="MANANA">
-                Mañana
-            </option>
-
-            <option value="TARDE">
-                Tarde
-            </option>
-
-        </select>
-
-    </div>
-
-
-    <button id="accionBtn">
         Cargando...
     </button>
 
@@ -158,9 +130,8 @@
 
 
     <p class="seguridad">
-        Dispositivo registrado
+        Dispositivo autorizado
     </p>
-
 
 </main>
 
