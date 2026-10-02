@@ -1,3 +1,10 @@
+const {
+    startRegistration,
+    startAuthentication,
+    browserSupportsWebAuthn
+} = SimpleWebAuthnBrowser;
+
+
 const nombreEl =
     document.getElementById("nombre");
 
@@ -19,6 +26,15 @@ const entradaEl =
 const salidaEl =
     document.getElementById("salida");
 
+const seguridadBox =
+    document.getElementById("seguridadBox");
+
+const seguridadTexto =
+    document.getElementById("seguridadTexto");
+
+const seguridadBtn =
+    document.getElementById("seguridadBtn");
+
 const egresoBtn =
     document.getElementById("egresoBtn");
 
@@ -28,14 +44,8 @@ const mensajeEl =
 
 let estadoActual = null;
 
-let intervaloNotificacion = null;
 
-
-// ==========================================================
-// MENSAJES
-// ==========================================================
-
-function mostrarMensaje(
+function mensaje(
     texto,
     error = false
 ) {
@@ -47,20 +57,18 @@ function mostrarMensaje(
         error
             ? "mensaje error"
             : "mensaje ok";
+
 }
 
 
-// ==========================================================
-// FORMATO HORA
-// ==========================================================
-
-function horaArgentina(fecha) {
+function horaArgentina(
+    fecha
+) {
 
     if (!fecha) {
-
         return "-";
-
     }
+
 
     return new Intl.DateTimeFormat(
         "es-AR",
@@ -85,10 +93,6 @@ function horaArgentina(fecha) {
 
 }
 
-
-// ==========================================================
-// CARGAR ESTADO
-// ==========================================================
 
 async function obtenerEstado() {
 
@@ -127,12 +131,10 @@ async function obtenerEstado() {
 
     if (error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         throw new Error(
-            "No se pudo obtener tu información."
+            "No se pudo consultar tu información."
         );
 
     }
@@ -141,8 +143,225 @@ async function obtenerEstado() {
     if (!data?.ok) {
 
         throw new Error(
-            data?.error ||
-            "La sesión no es válida."
+            data?.error
+            ||
+            "Sesión inválida."
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+function mostrarEstado(
+    data
+) {
+
+    estadoActual = data;
+
+
+    nombreEl.textContent =
+        `${data.apellido}, ${data.nombre}`;
+
+
+    gradoEl.textContent =
+        data.grado || "-";
+
+
+    departamentoEl.textContent =
+        data.departamento
+        || "Sin asignar";
+
+
+    fechaEl.textContent =
+        data.fecha || "-";
+
+
+    turnoEl.textContent =
+        !data.turno
+            ? "-"
+            : data.turno === "MANANA"
+                ? "Mañana"
+                : "Tarde";
+
+
+    entradaEl.textContent =
+        horaArgentina(
+            data.entrada
+        );
+
+
+    salidaEl.textContent =
+        horaArgentina(
+            data.salida
+        );
+
+
+    seguridadBox.hidden =
+        true;
+
+
+    egresoBtn.hidden =
+        true;
+
+
+    // ==========================================
+    // LE FALTA CONFIGURAR WEBAUTHN
+    // ==========================================
+
+    if (
+        !data.webauthn_configurado
+    ) {
+
+        seguridadBox.hidden =
+            false;
+
+
+        seguridadTexto.textContent =
+            "Para continuar debe configurar la seguridad de este dispositivo utilizando huella, reconocimiento facial o PIN.";
+
+
+        seguridadBtn.textContent =
+            "Configurar seguridad";
+
+
+        seguridadBtn.onclick =
+            configurarWebAuthn;
+
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // TODAVÍA NO REGISTRÓ INGRESO
+    // ==========================================
+
+    if (!data.entrada) {
+
+        seguridadBox.hidden =
+            false;
+
+
+        seguridadTexto.textContent =
+            "Verifique su identidad para registrar automáticamente el ingreso de hoy.";
+
+
+        seguridadBtn.textContent =
+            "Verificar identidad";
+
+
+        seguridadBtn.onclick =
+            verificarYRegistrarIngreso;
+
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // YA TERMINÓ
+    // ==========================================
+
+    if (data.salida) {
+
+        mensaje(
+            "La jornada de hoy ya está registrada."
+        );
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // PUEDE REGISTRAR EGRESO
+    // ==========================================
+
+    egresoBtn.hidden =
+        false;
+
+    egresoBtn.disabled =
+        false;
+
+}
+
+
+// ==========================================================
+// LLAMAR EDGE FUNCTION
+// ==========================================================
+
+async function webauthn(
+    action,
+    extra = {}
+) {
+
+    const {
+        data,
+        error
+    } =
+        await sb.functions.invoke(
+            "webauthn",
+            {
+
+                body: {
+
+                    action,
+
+                    token:
+                        obtenerTokenSesion(),
+
+                    device_id:
+                        obtenerDeviceId(),
+
+                    ...extra
+
+                }
+
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Edge Function:",
+            error
+        );
+
+
+        let texto =
+            "No se pudo realizar la verificación de seguridad.";
+
+
+        try {
+
+            const detalle =
+                await error.context.json();
+
+            texto =
+                detalle.error
+                || texto;
+
+        } catch (_) {}
+
+
+        throw new Error(texto);
+
+    }
+
+
+    if (!data?.ok) {
+
+        throw new Error(
+            data?.error
+            ||
+            "No se pudo realizar la verificación de seguridad."
         );
 
     }
@@ -154,12 +373,212 @@ async function obtenerEstado() {
 
 
 // ==========================================================
-// REGISTRAR ENTRADA AUTOMÁTICAMENTE
+// PRIMERA CONFIGURACIÓN
 // ==========================================================
 
-async function registrarEntradaAutomatica() {
+async function configurarWebAuthn() {
 
-    mostrarMensaje(
+    seguridadBtn.disabled =
+        true;
+
+
+    mensaje(
+        "Configurando seguridad..."
+    );
+
+
+    try {
+
+        if (
+            !browserSupportsWebAuthn()
+        ) {
+
+            throw new Error(
+                "Este navegador no soporta la verificación segura requerida."
+            );
+
+        }
+
+
+        const inicio =
+            await webauthn(
+                "register-options"
+            );
+
+
+        const respuesta =
+            await startRegistration({
+
+                optionsJSON:
+                    inicio.options
+
+            });
+
+
+        await webauthn(
+            "register-verify",
+            {
+
+                response:
+                    respuesta
+
+            }
+        );
+
+
+        mensaje(
+            "Seguridad configurada correctamente."
+        );
+
+
+        const estado =
+            await obtenerEstado();
+
+
+        mostrarEstado(
+            estado
+        );
+
+
+        // La propia configuración acaba
+        // de verificar al usuario.
+        // Si todavía no ingresó, registramos ahora.
+
+        if (!estado.entrada) {
+
+            await registrarIngreso();
+
+        }
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        let texto =
+            error.message
+            ||
+            "No se pudo configurar la seguridad.";
+
+
+        if (
+            error.name ===
+            "NotAllowedError"
+        ) {
+
+            texto =
+                "La verificación fue cancelada.";
+
+        }
+
+
+        mensaje(
+            texto,
+            true
+        );
+
+
+        seguridadBtn.disabled =
+            false;
+
+    }
+
+}
+
+
+// ==========================================================
+// VERIFICAR WEBAUTHN
+// ==========================================================
+
+async function verificarWebAuthn() {
+
+    if (
+        !browserSupportsWebAuthn()
+    ) {
+
+        throw new Error(
+            "Este navegador no soporta WebAuthn."
+        );
+
+    }
+
+
+    const inicio =
+        await webauthn(
+            "auth-options"
+        );
+
+
+    const respuesta =
+        await startAuthentication({
+
+            optionsJSON:
+                inicio.options
+
+        });
+
+
+    await webauthn(
+        "auth-verify",
+        {
+
+            response:
+                respuesta
+
+        }
+    );
+
+}
+
+
+// ==========================================================
+// INGRESO
+// ==========================================================
+
+async function verificarYRegistrarIngreso() {
+
+    seguridadBtn.disabled =
+        true;
+
+
+    try {
+
+        mensaje(
+            "Verificando identidad..."
+        );
+
+
+        await verificarWebAuthn();
+
+
+        await registrarIngreso();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        mensaje(
+            error.name === "NotAllowedError"
+                ? "La verificación fue cancelada."
+                : error.message,
+            true
+        );
+
+
+        seguridadBtn.disabled =
+            false;
+
+    }
+
+}
+
+
+async function registrarIngreso() {
+
+    mensaje(
         "Verificando ubicación..."
     );
 
@@ -168,7 +587,7 @@ async function registrarEntradaAutomatica() {
         await obtenerUbicacion();
 
 
-    mostrarMensaje(
+    mensaje(
         "Registrando ingreso..."
     );
 
@@ -202,9 +621,7 @@ async function registrarEntradaAutomatica() {
 
     if (error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         throw new Error(
             "No se pudo registrar el ingreso."
@@ -216,206 +633,57 @@ async function registrarEntradaAutomatica() {
     if (!data?.ok) {
 
         throw new Error(
-            data?.error ||
+            data?.error
+            ||
             "No se pudo registrar el ingreso."
         );
 
     }
 
 
-    return data;
+    mensaje(
+        "Ingreso registrado correctamente."
+    );
+
+
+    const estado =
+        await obtenerEstado();
+
+
+    mostrarEstado(
+        estado
+    );
 
 }
 
 
 // ==========================================================
-// MOSTRAR ESTADO
-// ==========================================================
-
-function mostrarEstado(data) {
-
-    estadoActual =
-        data;
-
-
-    nombreEl.textContent =
-        `${data.apellido}, ${data.nombre}`;
-
-
-    gradoEl.textContent =
-        data.grado || "-";
-
-
-    departamentoEl.textContent =
-        data.departamento
-        || "Sin asignar";
-
-
-    fechaEl.textContent =
-        data.fecha || "-";
-
-
-    turnoEl.textContent =
-        data.turno === "MANANA"
-            ? "Mañana"
-            : "Tarde";
-
-
-    entradaEl.textContent =
-        horaArgentina(
-            data.entrada
-        );
-
-
-    salidaEl.textContent =
-        horaArgentina(
-            data.salida
-        );
-
-
-    // ======================================================
-    // YA EGRESÓ
-    // ======================================================
-
-    if (data.salida) {
-
-        egresoBtn.textContent =
-            "Jornada registrada";
-
-        egresoBtn.disabled =
-            true;
-
-        mostrarMensaje(
-            "Ingreso y egreso registrados."
-        );
-
-        return;
-
-    }
-
-
-    // ======================================================
-    // PUEDE REGISTRAR EGRESO
-    // ======================================================
-
-    egresoBtn.textContent =
-        "Registrar egreso";
-
-    egresoBtn.disabled =
-        false;
-
-
-    programarRecordatorio();
-
-}
-
-
-// ==========================================================
-// INICIO
-// ==========================================================
-
-async function iniciar() {
-
-    egresoBtn.disabled =
-        true;
-
-    egresoBtn.textContent =
-        "Cargando...";
-
-
-    try {
-
-        let estado =
-            await obtenerEstado();
-
-
-        if (!estado) {
-
-            return;
-
-        }
-
-
-        // Si todavía no tiene entrada de hoy,
-        // se registra automáticamente.
-
-        if (!estado.entrada) {
-
-            await registrarEntradaAutomatica();
-
-
-            estado =
-                await obtenerEstado();
-
-
-            mostrarMensaje(
-                "Ingreso registrado correctamente."
-            );
-
-        }
-
-
-        mostrarEstado(
-            estado
-        );
-
-
-        await solicitarNotificaciones();
-
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-
-        mostrarMensaje(
-            error.message,
-            true
-        );
-
-
-        egresoBtn.textContent =
-            "No se registró el ingreso";
-
-        egresoBtn.disabled =
-            true;
-
-    }
-
-}
-
-
-// ==========================================================
-// REGISTRAR EGRESO
+// EGRESO
 // ==========================================================
 
 egresoBtn.addEventListener(
     "click",
+
     async () => {
-
-        if (
-            !estadoActual
-            ||
-            estadoActual.salida
-        ) {
-
-            return;
-
-        }
-
 
         egresoBtn.disabled =
             true;
 
 
-        mostrarMensaje(
-            "Registrando egreso..."
-        );
-
-
         try {
+
+            mensaje(
+                "Verificando identidad..."
+            );
+
+
+            await verificarWebAuthn();
+
+
+            mensaje(
+                "Registrando egreso..."
+            );
+
 
             const {
                 data,
@@ -437,9 +705,7 @@ egresoBtn.addEventListener(
 
             if (error) {
 
-                console.error(
-                    error
-                );
+                console.error(error);
 
                 throw new Error(
                     "No se pudo registrar el egreso."
@@ -451,14 +717,15 @@ egresoBtn.addEventListener(
             if (!data?.ok) {
 
                 throw new Error(
-                    data?.error ||
+                    data?.error
+                    ||
                     "No se pudo registrar el egreso."
                 );
 
             }
 
 
-            mostrarMensaje(
+            mensaje(
                 "Egreso registrado correctamente."
             );
 
@@ -474,13 +741,13 @@ egresoBtn.addEventListener(
 
         } catch (error) {
 
-            console.error(
-                error
-            );
+            console.error(error);
 
 
-            mostrarMensaje(
-                error.message,
+            mensaje(
+                error.name === "NotAllowedError"
+                    ? "La verificación fue cancelada."
+                    : error.message,
                 true
             );
 
@@ -495,204 +762,40 @@ egresoBtn.addEventListener(
 
 
 // ==========================================================
-// NOTIFICACIONES
+// INICIO
 // ==========================================================
 
-async function solicitarNotificaciones() {
+async function iniciar() {
 
-    if (
-        !("Notification" in window)
-    ) {
+    try {
 
-        return;
-
-    }
+        const estado =
+            await obtenerEstado();
 
 
-    if (
-        Notification.permission
-        === "default"
-    ) {
-
-        try {
-
-            await Notification
-                .requestPermission();
-
-        } catch (error) {
-
-            console.log(
-                error
-            );
-
+        if (!estado) {
+            return;
         }
 
-    }
 
-}
-
-
-// ==========================================================
-// RECORDATORIO DE EGRESO
-// ==========================================================
-
-function programarRecordatorio() {
-
-    if (
-        intervaloNotificacion
-    ) {
-
-        clearInterval(
-            intervaloNotificacion
-        );
-
-    }
-
-
-    if (
-        !estadoActual?.entrada
-        ||
-        estadoActual?.salida
-    ) {
-
-        return;
-
-    }
-
-
-    intervaloNotificacion =
-        setInterval(
-            revisarRecordatorio,
-            30000
+        mostrarEstado(
+            estado
         );
 
 
-    revisarRecordatorio();
+    } catch (error) {
 
-}
-
-
-function revisarRecordatorio() {
-
-    if (
-        !estadoActual
-        ||
-        estadoActual.salida
-    ) {
-
-        return;
-
-    }
+        console.error(error);
 
 
-    const partes =
-        new Intl.DateTimeFormat(
-            "en-US",
-            {
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                hour12:
-                    false,
-
-                timeZone:
-                    "America/Argentina/Buenos_Aires"
-
-            }
-        ).formatToParts(
-            new Date()
-        );
-
-
-    const hora =
-        Number(
-            partes.find(
-                p =>
-                    p.type === "hour"
-            )?.value
-        );
-
-
-    const minuto =
-        Number(
-            partes.find(
-                p =>
-                    p.type === "minute"
-            )?.value
-        );
-
-
-    const objetivo =
-        estadoActual.turno === "MANANA"
-            ? 13
-            : 18;
-
-
-    if (
-        hora !== objetivo
-        ||
-        minuto > 5
-    ) {
-
-        return;
-
-    }
-
-
-    const clave =
-        `notificacion-${estadoActual.fecha}-${objetivo}`;
-
-
-    if (
-        localStorage.getItem(
-            clave
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    localStorage.setItem(
-        clave,
-        "1"
-    );
-
-
-    mostrarMensaje(
-        "No olvides registrar egreso."
-    );
-
-
-    if (
-        "Notification" in window
-        &&
-        Notification.permission
-        === "granted"
-    ) {
-
-        new Notification(
-            "Control de asistencia",
-            {
-
-                body:
-                    "No olvides registrar egreso."
-
-            }
+        mensaje(
+            error.message,
+            true
         );
 
     }
 
 }
 
-
-// ==========================================================
-// INICIAR
-// ==========================================================
 
 iniciar();
