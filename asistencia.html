@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
@@ -11,9 +10,14 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Control de Asistencia</title>
+    <title>
+        Control de Asistencia
+    </title>
 
-    <link rel="icon" href="data:,">
+    <link
+        rel="icon"
+        href="data:,"
+    >
 
     <link
         rel="stylesheet"
@@ -35,7 +39,6 @@
         Cargando...
     </h1>
 
-
     <p
         id="grado"
         class="subtitle"
@@ -45,7 +48,6 @@
 
 
     <div class="datos">
-
 
         <div class="dato">
 
@@ -59,7 +61,6 @@
 
         </div>
 
-
         <div class="dato">
 
             <span>
@@ -71,7 +72,6 @@
             </strong>
 
         </div>
-
 
         <div class="dato">
 
@@ -85,7 +85,6 @@
 
         </div>
 
-
         <div class="dato">
 
             <span>
@@ -97,7 +96,6 @@
             </strong>
 
         </div>
-
 
         <div class="dato">
 
@@ -111,15 +109,33 @@
 
         </div>
 
+    </div>
+
+
+    <div
+        id="seguridadBox"
+        class="seguridad-box"
+        hidden
+    >
+
+        <strong>
+            Seguridad del dispositivo
+        </strong>
+
+        <p id="seguridadTexto">
+        </p>
+
+        <button id="seguridadBtn">
+        </button>
 
     </div>
 
 
     <button
         id="egresoBtn"
-        disabled
+        hidden
     >
-        Cargando...
+        Registrar egreso
     </button>
 
 
@@ -137,6 +153,8 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js"></script>
 
 <script src="js/config.js"></script>
 
