@@ -180,21 +180,14 @@ function mensaje(
 
 async function comprobarAdmin() {
 
-    const token =
-        obtenerTokenSesion();
-
-
-    if (!token) {
-
-        window.location.replace(
-            "index.html"
+    function obtenerAdminToken() {
+    
+        return localStorage.getItem(
+            "admin_session"
         );
-
-        return null;
-
+    
     }
-
-
+    
     const {
         data,
         error
@@ -570,7 +563,7 @@ async function cargarReporte() {
                 {
 
                     p_token:
-                        obtenerTokenSesion(),
+                        obtenerAdminToken(),
 
                     p_device_id:
                         obtenerDeviceId(),
