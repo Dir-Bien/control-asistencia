@@ -2,6 +2,7 @@
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -9,14 +10,20 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Panel administrativo</title>
+    <title>
+        Panel administrativo
+    </title>
 
-    <link rel="icon" href="data:,">
+    <link
+        rel="icon"
+        href="data:,"
+    >
 
     <link
         rel="stylesheet"
         href="css/admin.css"
     >
+
 </head>
 
 <body>
@@ -41,9 +48,10 @@
 
         </div>
 
+
         <button
             id="cerrarSesionBtn"
-            style="width:auto;"
+            class="btn-secundario btn-cerrar"
         >
             Cerrar sesión
         </button>
@@ -56,12 +64,16 @@
         hidden
     >
 
+        <!-- ===============================
+             FILTROS
+        ================================ -->
+
         <div class="card filtros">
 
             <div>
 
-                <label>
-                    Período
+                <label for="tipoPeriodo">
+                    Vista
                 </label>
 
                 <select id="tipoPeriodo">
@@ -81,7 +93,7 @@
 
             <div id="campoDia">
 
-                <label>
+                <label for="fecha">
                     Día
                 </label>
 
@@ -98,7 +110,7 @@
                 hidden
             >
 
-                <label>
+                <label for="mes">
                     Mes
                 </label>
 
@@ -112,7 +124,7 @@
 
             <div>
 
-                <label>
+                <label for="departamento">
                     Departamento
                 </label>
 
@@ -129,7 +141,7 @@
 
             <div>
 
-                <label>
+                <label for="grado">
                     Grado
                 </label>
 
@@ -152,10 +164,10 @@
             </div>
 
 
-            <div>
+            <div class="boton-filtro">
 
                 <button id="buscarBtn">
-                    Buscar
+                    Mostrar
                 </button>
 
             </div>
@@ -163,12 +175,16 @@
         </div>
 
 
+        <!-- ===============================
+             RESUMEN
+        ================================ -->
+
         <div class="resumen">
 
             <div class="mini-card">
 
-                <span>
-                    Registros
+                <span id="labelCantidad">
+                    Personal
                 </span>
 
                 <strong id="cantidad">
@@ -178,10 +194,10 @@
             </div>
 
 
-            <div class="mini-card">
+            <div class="mini-card completo">
 
                 <span>
-                    Completos
+                    Jornadas completas
                 </span>
 
                 <strong id="completos">
@@ -191,7 +207,7 @@
             </div>
 
 
-            <div class="mini-card">
+            <div class="mini-card pendiente">
 
                 <span>
                     Sin egreso
@@ -204,7 +220,7 @@
             </div>
 
 
-            <div class="mini-card">
+            <div class="mini-card faltante">
 
                 <span>
                     Sin registro
@@ -219,10 +235,15 @@
         </div>
 
 
+        <!-- ===============================
+             EXPORTAR
+        ================================ -->
+
         <div class="acciones">
 
             <button
                 id="excelBtn"
+                class="btn-exportar"
                 disabled
             >
                 Descargar Excel
@@ -230,6 +251,7 @@
 
             <button
                 id="pdfBtn"
+                class="btn-exportar"
                 disabled
             >
                 Descargar PDF
@@ -244,60 +266,11 @@
         ></p>
 
 
-        <div class="tabla-wrapper">
+        <!-- ===============================
+             CONTENIDO DINÁMICO
+        ================================ -->
 
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Fecha
-                        </th>
-
-                        <th>
-                            Departamento
-                        </th>
-
-                        <th>
-                            Grado
-                        </th>
-
-                        <th>
-                            Apellido y nombre
-                        </th>
-
-                        <th>
-                            DNI
-                        </th>
-
-                        <th>
-                            Turno
-                        </th>
-
-                        <th>
-                            Ingreso
-                        </th>
-
-                        <th>
-                            Egreso
-                        </th>
-
-                        <th>
-                            Estado
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="tablaBody">
-                </tbody>
-
-            </table>
-
-        </div>
+        <div id="contenidoAsistencias"></div>
 
     </section>
 
@@ -317,4 +290,5 @@
 <script src="js/admin.js"></script>
 
 </body>
+
 </html>
