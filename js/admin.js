@@ -34,11 +34,11 @@ const excelBtn =
 const pdfBtn =
     document.getElementById("pdfBtn");
 
-const tablaBody =
-    document.getElementById("tablaBody");
-
 const mensajeEl =
     document.getElementById("mensaje");
+
+const contenidoAsistencias =
+    document.getElementById("contenidoAsistencias");
 
 const cerrarSesionBtn =
     document.getElementById("cerrarSesionBtn");
@@ -63,7 +63,7 @@ function obtenerAdminToken() {
 
 
 // ======================================================
-// FECHA DE ARGENTINA
+// FECHA ARGENTINA
 // ======================================================
 
 function fechaArgentina() {
@@ -109,6 +109,7 @@ function fechaArgentina() {
 
 
     return `${year}-${month}-${day}`;
+
 }
 
 
@@ -144,6 +145,38 @@ function mensaje(
         error
             ? "mensaje error"
             : "mensaje ok";
+
+}
+
+
+// ======================================================
+// ESCAPAR HTML
+// ======================================================
+
+function escaparHTML(
+    texto
+) {
+
+    return String(
+        texto ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        );
+
 }
 
 
@@ -164,6 +197,7 @@ async function comprobarAdmin() {
         );
 
         return;
+
     }
 
 
@@ -187,20 +221,11 @@ async function comprobarAdmin() {
             );
 
 
-        if (error) {
-
-            console.error(
-                error
-            );
-
-            throw new Error(
-                "No se pudo verificar la sesión."
-            );
-
-        }
-
-
-        if (!data?.ok) {
+        if (
+            error
+            ||
+            !data?.ok
+        ) {
 
             localStorage.removeItem(
                 "admin_session"
@@ -243,12 +268,8 @@ async function comprobarAdmin() {
         );
 
 
-        adminNombre.textContent =
-            "Acceso no autorizado";
-
-
         mensaje(
-            error.message,
+            "No se pudo cargar el panel.",
             true
         );
 
@@ -273,30 +294,30 @@ function cargarDepartamentos(
         adminActual.departamento_id === 0
     ) {
 
-        const todos =
+        const option =
             document.createElement(
                 "option"
             );
 
 
-        todos.value =
+        option.value =
             "";
 
 
-        todos.textContent =
+        option.textContent =
             "Todos";
 
 
         departamentoSelect
             .appendChild(
-                todos
+                option
             );
 
     }
 
 
     departamentos.forEach(
-        dep => {
+        departamento => {
 
             const option =
                 document.createElement(
@@ -305,11 +326,11 @@ function cargarDepartamentos(
 
 
             option.value =
-                dep.id;
+                departamento.id;
 
 
             option.textContent =
-                dep.nombre;
+                departamento.nombre;
 
 
             departamentoSelect
@@ -320,9 +341,6 @@ function cargarDepartamentos(
         }
     );
 
-
-    // Si el admin pertenece a un solo departamento,
-    // no puede cambiarlo.
 
     if (
         adminActual.departamento_id !== 0
@@ -343,17 +361,16 @@ function cargarDepartamentos(
 
 
 // ======================================================
-// PERÍODO
+// CAMBIO DE VISTA
 // ======================================================
 
 tipoPeriodo.addEventListener(
     "change",
-
     () => {
 
         const esMes =
-            tipoPeriodo.value
-            === "mes";
+            tipoPeriodo.value ===
+            "mes";
 
 
         campoDia.hidden =
@@ -363,15 +380,22 @@ tipoPeriodo.addEventListener(
         campoMes.hidden =
             !esMes;
 
+
+        cargarReporte();
+
     }
 );
 
 
+// ======================================================
+// RANGO
+// ======================================================
+
 function rangoSeleccionado() {
 
     if (
-        tipoPeriodo.value
-        === "dia"
+        tipoPeriodo.value ===
+        "dia"
     ) {
 
         return {
@@ -429,7 +453,7 @@ async function cargarReporte() {
 
 
     mensaje(
-        "Cargando..."
+        "Cargando información..."
     );
 
 
@@ -439,20 +463,12 @@ async function cargarReporte() {
             rangoSeleccionado();
 
 
-        let departamento =
-            null;
-
-
-        if (
+        const departamento =
             departamentoSelect.value
-        ) {
-
-            departamento =
-                Number(
+                ? Number(
                     departamentoSelect.value
-                );
-
-        }
+                )
+                : null;
 
 
         const grado =
@@ -520,13 +536,40 @@ async function cargarReporte() {
             || [];
 
 
-        mostrarTabla();
+        actualizarResumen();
+
+
+        if (
+            tipoPeriodo.value ===
+            "mes"
+        ) {
+
+            mostrarVistaMes();
+
+        } else {
+
+            mostrarVistaDia();
+
+        }
+
+
+        excelBtn.disabled =
+            filasActuales.length === 0;
+
+
+        pdfBtn.disabled =
+            filasActuales.length === 0;
 
 
         mensaje("");
 
 
     } catch (error) {
+
+        console.error(
+            error
+        );
+
 
         mensaje(
             error.message,
@@ -585,94 +628,67 @@ function formatoHora(
 
 
 // ======================================================
-// TABLA
+// AGRUPAR POR DEPARTAMENTO
 // ======================================================
 
-function mostrarTabla() {
+function agruparPorDepartamento() {
 
-    tablaBody.innerHTML =
-        "";
+    const grupos =
+        {};
 
 
     filasActuales.forEach(
         fila => {
 
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-
-            let turno =
-                "-";
+            const departamento =
+                fila.departamento
+                || "Sin departamento";
 
 
             if (
-                fila.turno === "MANANA"
+                !grupos[
+                    departamento
+                ]
             ) {
 
-                turno =
-                    "Mañana";
+                grupos[
+                    departamento
+                ] = [];
 
             }
 
 
-            if (
-                fila.turno === "TARDE"
-            ) {
+            grupos[
+                departamento
+            ].push(
+                fila
+            );
 
-                turno =
-                    "Tarde";
-
-            }
-
-
-            tr.innerHTML =
-                `
-
-                <td>
-                    ${fila.fecha}
-                </td>
-
-                <td>
-                    ${fila.departamento}
-                </td>
-
-                <td>
-                    ${fila.grado || "-"}
-                </td>
-
-                <td>
-                    ${fila.apellido}, ${fila.nombre}
-                </td>
-
-                <td>
-                    ${fila.dni}
-                </td>
-
-                <td>
-                    ${turno}
-                </td>
-
-                <td>
-                    ${formatoHora(fila.entrada)}
-                </td>
-
-                <td>
-                    ${formatoHora(fila.salida)}
-                </td>
-
-                <td>
-                    ${fila.estado}
-                </td>
-
-                `;
+        }
+    );
 
 
-            tablaBody
-                .appendChild(
-                    tr
-                );
+    return grupos;
+
+}
+
+
+// ======================================================
+// RESUMEN
+// ======================================================
+
+function actualizarResumen() {
+
+    const personas =
+        new Set();
+
+
+    filasActuales.forEach(
+        fila => {
+
+            personas.add(
+                fila.dni
+            );
 
         }
     );
@@ -681,110 +697,771 @@ function mostrarTabla() {
     const completos =
         filasActuales.filter(
             fila =>
-                fila.estado
-                === "COMPLETO"
+                fila.estado ===
+                "COMPLETO"
         ).length;
 
 
     const sinEgreso =
         filasActuales.filter(
             fila =>
-                fila.estado
-                === "SIN EGRESO"
+                fila.estado ===
+                "SIN EGRESO"
         ).length;
 
 
     const sinRegistro =
         filasActuales.filter(
             fila =>
-                fila.estado
-                === "SIN REGISTRO"
+                fila.estado ===
+                "SIN REGISTRO"
         ).length;
 
 
-    document.getElementById(
-        "cantidad"
-    ).textContent =
-        filasActuales.length;
+    document
+        .getElementById(
+            "cantidad"
+        )
+        .textContent =
+            personas.size;
 
 
-    document.getElementById(
-        "completos"
-    ).textContent =
-        completos;
+    document
+        .getElementById(
+            "completos"
+        )
+        .textContent =
+            completos;
 
 
-    document.getElementById(
-        "sinEgreso"
-    ).textContent =
-        sinEgreso;
+    document
+        .getElementById(
+            "sinEgreso"
+        )
+        .textContent =
+            sinEgreso;
 
 
-    document.getElementById(
-        "sinRegistro"
-    ).textContent =
-        sinRegistro;
-
-
-    excelBtn.disabled =
-        filasActuales.length === 0;
-
-
-    pdfBtn.disabled =
-        filasActuales.length === 0;
+    document
+        .getElementById(
+            "sinRegistro"
+        )
+        .textContent =
+            sinRegistro;
 
 }
 
 
 // ======================================================
-// EXPORTAR
+// VISTA DÍA
 // ======================================================
 
-function datosExportacion() {
+function mostrarVistaDia() {
 
-    return filasActuales.map(
-        fila => ({
+    contenidoAsistencias
+        .innerHTML =
+            "";
 
-            Fecha:
-                fila.fecha,
 
-            Departamento:
-                fila.departamento,
+    const grupos =
+        agruparPorDepartamento();
 
-            Grado:
-                fila.grado || "",
 
-            DNI:
-                fila.dni,
+    Object
+        .keys(grupos)
+        .sort()
+        .forEach(
+            departamento => {
 
-            Apellido:
-                fila.apellido,
+                const filas =
+                    grupos[
+                        departamento
+                    ];
 
-            Nombre:
-                fila.nombre,
 
-            Turno:
-                fila.turno === "MANANA"
-                    ? "Mañana"
-                    : fila.turno === "TARDE"
-                        ? "Tarde"
-                        : "",
+                const contenedor =
+                    document.createElement(
+                        "section"
+                    );
 
-            Ingreso:
-                formatoHora(
-                    fila.entrada
-                ),
 
-            Egreso:
-                formatoHora(
-                    fila.salida
-                ),
+                contenedor.className =
+                    "departamento-card";
 
-            Estado:
-                fila.estado
 
-        })
+                let html =
+                    `
+
+                    <div class="departamento-header">
+
+                        <div>
+
+                            <h2>
+                                ${escaparHTML(departamento)}
+                            </h2>
+
+                            <span>
+                                ${filas.length} personas
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="tabla-wrapper">
+
+                        <table class="tabla-dia">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Grado
+                                    </th>
+
+                                    <th>
+                                        Apellido y nombre
+                                    </th>
+
+                                    <th>
+                                        DNI
+                                    </th>
+
+                                    <th>
+                                        Turno
+                                    </th>
+
+                                    <th>
+                                        Ingreso
+                                    </th>
+
+                                    <th>
+                                        Egreso
+                                    </th>
+
+                                    <th>
+                                        Estado
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                    `;
+
+
+                filas
+                    .sort(
+                        (
+                            a,
+                            b
+                        ) => {
+
+                            return a.apellido
+                                .localeCompare(
+                                    b.apellido
+                                );
+
+                        }
+                    )
+                    .forEach(
+                        fila => {
+
+                            let turno =
+                                "-";
+
+
+                            if (
+                                fila.turno ===
+                                "MANANA"
+                            ) {
+
+                                turno =
+                                    "Mañana";
+
+                            }
+
+
+                            if (
+                                fila.turno ===
+                                "TARDE"
+                            ) {
+
+                                turno =
+                                    "Tarde";
+
+                            }
+
+
+                            const claseEstado =
+                                obtenerClaseEstado(
+                                    fila.estado
+                                );
+
+
+                            html +=
+                                `
+
+                                <tr>
+
+                                    <td>
+                                        ${escaparHTML(fila.grado || "-")}
+                                    </td>
+
+                                    <td class="persona">
+                                        ${escaparHTML(fila.apellido)},
+                                        ${escaparHTML(fila.nombre)}
+                                    </td>
+
+                                    <td>
+                                        ${escaparHTML(fila.dni)}
+                                    </td>
+
+                                    <td>
+                                        ${turno}
+                                    </td>
+
+                                    <td class="hora">
+                                        ${formatoHora(fila.entrada)}
+                                    </td>
+
+                                    <td class="hora">
+                                        ${formatoHora(fila.salida)}
+                                    </td>
+
+                                    <td>
+
+                                        <span class="estado ${claseEstado}">
+                                            ${fila.estado}
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                                `;
+
+                        }
+                    );
+
+
+                html +=
+                    `
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    `;
+
+
+                contenedor.innerHTML =
+                    html;
+
+
+                contenidoAsistencias
+                    .appendChild(
+                        contenedor
+                    );
+
+            }
+        );
+
+}
+
+
+// ======================================================
+// VISTA MES
+// ======================================================
+
+function mostrarVistaMes() {
+
+    contenidoAsistencias
+        .innerHTML =
+            "";
+
+
+    const grupos =
+        agruparPorDepartamento();
+
+
+    Object
+        .keys(grupos)
+        .sort()
+        .forEach(
+            departamento => {
+
+                const filas =
+                    grupos[
+                        departamento
+                    ];
+
+
+                const personas =
+                    agruparPersonasMes(
+                        filas
+                    );
+
+
+                const dias =
+                    obtenerDiasDelMes(
+                        filas
+                    );
+
+
+                const contenedor =
+                    document.createElement(
+                        "section"
+                    );
+
+
+                contenedor.className =
+                    "departamento-card";
+
+
+                let html =
+                    `
+
+                    <div class="departamento-header">
+
+                        <div>
+
+                            <h2>
+                                ${escaparHTML(departamento)}
+                            </h2>
+
+                            <span>
+                                ${personas.length} personas
+                            </span>
+
+                        </div>
+
+                        <div class="leyenda">
+
+                            <span class="leyenda-item leyenda-completo">
+                                Completo
+                            </span>
+
+                            <span class="leyenda-item leyenda-pendiente">
+                                Sin egreso
+                            </span>
+
+                            <span class="leyenda-item leyenda-faltante">
+                                Sin registro
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="tabla-wrapper mensual">
+
+                        <table class="tabla-mes">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th class="sticky-col grado-col">
+                                        Grado
+                                    </th>
+
+                                    <th class="sticky-col nombre-col">
+                                        Personal
+                                    </th>
+
+                    `;
+
+
+                dias.forEach(
+                    fecha => {
+
+                        const dia =
+                            Number(
+                                fecha
+                                    .split("-")[2]
+                            );
+
+
+                        const nombreDia =
+                            obtenerNombreDia(
+                                fecha
+                            );
+
+
+                        html +=
+                            `
+
+                            <th class="dia-col">
+
+                                <span class="numero-dia">
+                                    ${dia}
+                                </span>
+
+                                <span class="nombre-dia">
+                                    ${nombreDia}
+                                </span>
+
+                            </th>
+
+                            `;
+
+                    }
+                );
+
+
+                html +=
+                    `
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                    `;
+
+
+                personas.forEach(
+                    persona => {
+
+                        html +=
+                            `
+
+                            <tr>
+
+                                <td class="sticky-col grado-col">
+                                    ${escaparHTML(persona.grado || "-")}
+                                </td>
+
+                                <td class="sticky-col nombre-col persona-mes">
+
+                                    <strong>
+                                        ${escaparHTML(persona.apellido)},
+                                        ${escaparHTML(persona.nombre)}
+                                    </strong>
+
+                                    <small>
+                                        ${escaparHTML(persona.dni)}
+                                    </small>
+
+                                </td>
+
+                        `;
+
+
+                        dias.forEach(
+                            fecha => {
+
+                                const registro =
+                                    persona
+                                        .dias[
+                                            fecha
+                                        ];
+
+
+                                html +=
+                                    crearCeldaMes(
+                                        registro
+                                    );
+
+                            }
+                        );
+
+
+                        html +=
+                            `
+
+                            </tr>
+
+                            `;
+
+                    }
+                );
+
+
+                html +=
+                    `
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    `;
+
+
+                contenedor.innerHTML =
+                    html;
+
+
+                contenidoAsistencias
+                    .appendChild(
+                        contenedor
+                    );
+
+            }
+        );
+
+}
+
+
+// ======================================================
+// AGRUPAR PERSONAS MES
+// ======================================================
+
+function agruparPersonasMes(
+    filas
+) {
+
+    const personas =
+        {};
+
+
+    filas.forEach(
+        fila => {
+
+            const clave =
+                fila.dni;
+
+
+            if (
+                !personas[
+                    clave
+                ]
+            ) {
+
+                personas[
+                    clave
+                ] = {
+
+                    dni:
+                        fila.dni,
+
+                    grado:
+                        fila.grado,
+
+                    apellido:
+                        fila.apellido,
+
+                    nombre:
+                        fila.nombre,
+
+                    dias:
+                        {}
+
+                };
+
+            }
+
+
+            personas[
+                clave
+            ].dias[
+                fila.fecha
+            ] =
+                fila;
+
+        }
     );
+
+
+    return Object
+        .values(
+            personas
+        )
+        .sort(
+            (
+                a,
+                b
+            ) => {
+
+                return a.apellido
+                    .localeCompare(
+                        b.apellido
+                    );
+
+            }
+        );
+
+}
+
+
+// ======================================================
+// DÍAS DEL MES
+// ======================================================
+
+function obtenerDiasDelMes(
+    filas
+) {
+
+    return [
+        ...new Set(
+            filas.map(
+                fila =>
+                    fila.fecha
+            )
+        )
+    ].sort();
+
+}
+
+
+function obtenerNombreDia(
+    fecha
+) {
+
+    const [
+        year,
+        month,
+        day
+    ] =
+        fecha
+            .split("-")
+            .map(Number);
+
+
+    const fechaLocal =
+        new Date(
+            year,
+            month - 1,
+            day
+        );
+
+
+    const nombre =
+        new Intl.DateTimeFormat(
+            "es-AR",
+            {
+                weekday:
+                    "short"
+            }
+        )
+        .format(
+            fechaLocal
+        );
+
+
+    return nombre
+        .replace(
+            ".",
+            ""
+        );
+
+}
+
+
+// ======================================================
+// CELDA MES
+// ======================================================
+
+function crearCeldaMes(
+    registro
+) {
+
+    if (
+        !registro
+        ||
+        registro.estado ===
+        "SIN REGISTRO"
+    ) {
+
+        return `
+
+            <td class="dia-celda sin-registro">
+
+                <span class="sin-dato">
+                    —
+                </span>
+
+            </td>
+
+        `;
+
+    }
+
+
+    const entrada =
+        formatoHora(
+            registro.entrada
+        );
+
+
+    const salida =
+        registro.salida
+            ? formatoHora(
+                registro.salida
+            )
+            : "--:--";
+
+
+    const clase =
+        registro.estado ===
+        "COMPLETO"
+            ? "completo"
+            : "sin-egreso";
+
+
+    return `
+
+        <td class="dia-celda ${clase}">
+
+            <span class="hora-entrada">
+                ${entrada}
+            </span>
+
+            <span class="separador-horas">
+                /
+            </span>
+
+            <span class="hora-salida">
+                ${salida}
+            </span>
+
+        </td>
+
+    `;
+
+}
+
+
+// ======================================================
+// CLASE ESTADO
+// ======================================================
+
+function obtenerClaseEstado(
+    estado
+) {
+
+    if (
+        estado ===
+        "COMPLETO"
+    ) {
+
+        return "estado-completo";
+
+    }
+
+
+    if (
+        estado ===
+        "SIN EGRESO"
+    ) {
+
+        return "estado-pendiente";
+
+    }
+
+
+    return "estado-faltante";
 
 }
 
@@ -795,36 +1472,255 @@ function datosExportacion() {
 
 excelBtn.addEventListener(
     "click",
-
     () => {
 
-        const hoja =
-            XLSX.utils
-                .json_to_sheet(
-                    datosExportacion()
-                );
+        if (
+            tipoPeriodo.value ===
+            "mes"
+        ) {
 
+            exportarExcelMes();
 
-        const libro =
-            XLSX.utils
-                .book_new();
+        } else {
 
+            exportarExcelDia();
 
-        XLSX.utils
-            .book_append_sheet(
-                libro,
-                hoja,
-                "Asistencias"
-            );
-
-
-        XLSX.writeFile(
-            libro,
-            "asistencias.xlsx"
-        );
+        }
 
     }
 );
+
+
+function exportarExcelDia() {
+
+    const libro =
+        XLSX.utils
+            .book_new();
+
+
+    const grupos =
+        agruparPorDepartamento();
+
+
+    Object
+        .keys(grupos)
+        .forEach(
+            departamento => {
+
+                const datos =
+                    grupos[
+                        departamento
+                    ].map(
+                        fila => ({
+
+                            Grado:
+                                fila.grado,
+
+                            DNI:
+                                fila.dni,
+
+                            Apellido:
+                                fila.apellido,
+
+                            Nombre:
+                                fila.nombre,
+
+                            Turno:
+                                fila.turno === "MANANA"
+                                    ? "Mañana"
+                                    : fila.turno === "TARDE"
+                                        ? "Tarde"
+                                        : "",
+
+                            Ingreso:
+                                formatoHora(
+                                    fila.entrada
+                                ),
+
+                            Egreso:
+                                formatoHora(
+                                    fila.salida
+                                ),
+
+                            Estado:
+                                fila.estado
+
+                        })
+                    );
+
+
+                const hoja =
+                    XLSX.utils
+                        .json_to_sheet(
+                            datos
+                        );
+
+
+                XLSX.utils
+                    .book_append_sheet(
+                        libro,
+                        hoja,
+                        nombreHojaExcel(
+                            departamento
+                        )
+                    );
+
+            }
+        );
+
+
+    XLSX.writeFile(
+        libro,
+        `asistencia_${fechaInput.value}.xlsx`
+    );
+
+}
+
+
+function exportarExcelMes() {
+
+    const libro =
+        XLSX.utils
+            .book_new();
+
+
+    const grupos =
+        agruparPorDepartamento();
+
+
+    Object
+        .keys(grupos)
+        .forEach(
+            departamento => {
+
+                const filas =
+                    grupos[
+                        departamento
+                    ];
+
+
+                const personas =
+                    agruparPersonasMes(
+                        filas
+                    );
+
+
+                const dias =
+                    obtenerDiasDelMes(
+                        filas
+                    );
+
+
+                const datos =
+                    personas.map(
+                        persona => {
+
+                            const fila = {
+
+                                Grado:
+                                    persona.grado,
+
+                                DNI:
+                                    persona.dni,
+
+                                Personal:
+                                    `${persona.apellido}, ${persona.nombre}`
+
+                            };
+
+
+                            dias.forEach(
+                                fecha => {
+
+                                    const dia =
+                                        Number(
+                                            fecha
+                                                .split("-")[2]
+                                        );
+
+
+                                    const registro =
+                                        persona
+                                            .dias[
+                                                fecha
+                                            ];
+
+
+                                    if (
+                                        !registro
+                                        ||
+                                        !registro.entrada
+                                    ) {
+
+                                        fila[
+                                            `Día ${dia}`
+                                        ] =
+                                            "-";
+
+                                    } else {
+
+                                        fila[
+                                            `Día ${dia}`
+                                        ] =
+                                            `${formatoHora(registro.entrada)} / ${registro.salida ? formatoHora(registro.salida) : "--:--"}`;
+
+                                    }
+
+                                }
+                            );
+
+
+                            return fila;
+
+                        }
+                    );
+
+
+                const hoja =
+                    XLSX.utils
+                        .json_to_sheet(
+                            datos
+                        );
+
+
+                XLSX.utils
+                    .book_append_sheet(
+                        libro,
+                        hoja,
+                        nombreHojaExcel(
+                            departamento
+                        )
+                    );
+
+            }
+        );
+
+
+    XLSX.writeFile(
+        libro,
+        `asistencia_${mesInput.value}.xlsx`
+    );
+
+}
+
+
+function nombreHojaExcel(
+    nombre
+) {
+
+    return nombre
+        .replace(
+            /[\\/?*[\]:]/g,
+            ""
+        )
+        .substring(
+            0,
+            31
+        )
+        ||
+        "Departamento";
+
+}
 
 
 // ======================================================
@@ -833,121 +1729,354 @@ excelBtn.addEventListener(
 
 pdfBtn.addEventListener(
     "click",
-
     () => {
 
-        const {
-            jsPDF
-        } =
-            window.jspdf;
+        if (
+            tipoPeriodo.value ===
+            "mes"
+        ) {
+
+            exportarPDFMes();
+
+        } else {
+
+            exportarPDFDia();
+
+        }
+
+    }
+);
 
 
-        const doc =
-            new jsPDF({
-                orientation:
-                    "landscape"
-            });
+function exportarPDFDia() {
+
+    const {
+        jsPDF
+    } =
+        window.jspdf;
 
 
-        doc.text(
-            "Reporte de asistencias",
-            14,
-            15
-        );
+    const doc =
+        new jsPDF({
+            orientation:
+                "landscape"
+        });
 
 
-        const filas =
-            datosExportacion()
-                .map(
-                    dato => [
+    const grupos =
+        agruparPorDepartamento();
 
-                        dato.Fecha,
 
-                        dato.Departamento,
+    let primerDepartamento =
+        true;
 
-                        dato.Grado,
 
-                        `${dato.Apellido}, ${dato.Nombre}`,
+    Object
+        .keys(grupos)
+        .forEach(
+            departamento => {
 
-                        dato.DNI,
+                if (
+                    !primerDepartamento
+                ) {
 
-                        dato.Turno,
+                    doc.addPage();
 
-                        dato.Ingreso,
+                }
 
-                        dato.Egreso,
 
-                        dato.Estado
+                primerDepartamento =
+                    false;
 
-                    ]
+
+                doc.setFontSize(
+                    15
                 );
 
 
-        doc.autoTable({
+                doc.text(
+                    departamento,
+                    14,
+                    15
+                );
 
-            startY:
-                22,
 
-            head: [[
+                const filas =
+                    grupos[
+                        departamento
+                    ].map(
+                        fila => [
 
-                "Fecha",
+                            fila.grado || "",
 
-                "Departamento",
+                            `${fila.apellido}, ${fila.nombre}`,
 
-                "Grado",
+                            fila.dni,
 
-                "Apellido y nombre",
+                            fila.turno === "MANANA"
+                                ? "Mañana"
+                                : fila.turno === "TARDE"
+                                    ? "Tarde"
+                                    : "",
 
-                "DNI",
+                            formatoHora(
+                                fila.entrada
+                            ),
 
-                "Turno",
+                            formatoHora(
+                                fila.salida
+                            ),
 
-                "Ingreso",
+                            fila.estado
 
-                "Egreso",
+                        ]
+                    );
 
-                "Estado"
 
-            ]],
+                doc.autoTable({
 
-            body:
-                filas,
+                    startY:
+                        22,
 
-            styles: {
-                fontSize: 7
+                    head: [[
+
+                        "Grado",
+
+                        "Apellido y nombre",
+
+                        "DNI",
+
+                        "Turno",
+
+                        "Ingreso",
+
+                        "Egreso",
+
+                        "Estado"
+
+                    ]],
+
+                    body:
+                        filas,
+
+                    styles: {
+                        fontSize: 8
+                    }
+
+                });
+
             }
+        );
+
+
+    doc.save(
+        `asistencia_${fechaInput.value}.pdf`
+    );
+
+}
+
+
+function exportarPDFMes() {
+
+    const {
+        jsPDF
+    } =
+        window.jspdf;
+
+
+    const doc =
+        new jsPDF({
+
+            orientation:
+                "landscape",
+
+            format:
+                "a3"
 
         });
 
 
-        doc.save(
-            "asistencias.pdf"
+    const grupos =
+        agruparPorDepartamento();
+
+
+    let primerDepartamento =
+        true;
+
+
+    Object
+        .keys(grupos)
+        .forEach(
+            departamento => {
+
+                if (
+                    !primerDepartamento
+                ) {
+
+                    doc.addPage();
+
+                }
+
+
+                primerDepartamento =
+                    false;
+
+
+                const filas =
+                    grupos[
+                        departamento
+                    ];
+
+
+                const personas =
+                    agruparPersonasMes(
+                        filas
+                    );
+
+
+                const dias =
+                    obtenerDiasDelMes(
+                        filas
+                    );
+
+
+                doc.setFontSize(
+                    14
+                );
+
+
+                doc.text(
+                    `${departamento} - ${mesInput.value}`,
+                    10,
+                    12
+                );
+
+
+                const encabezado = [
+
+                    "Grado",
+
+                    "Personal",
+
+                    ...dias.map(
+                        fecha =>
+                            Number(
+                                fecha
+                                    .split("-")[2]
+                            )
+                    )
+
+                ];
+
+
+                const body =
+                    personas.map(
+                        persona => [
+
+                            persona.grado
+                            || "",
+
+                            `${persona.apellido}, ${persona.nombre}`,
+
+                            ...dias.map(
+                                fecha => {
+
+                                    const registro =
+                                        persona
+                                            .dias[
+                                                fecha
+                                            ];
+
+
+                                    if (
+                                        !registro
+                                        ||
+                                        !registro.entrada
+                                    ) {
+
+                                        return "-";
+
+                                    }
+
+
+                                    return `${formatoHora(registro.entrada)}\n${registro.salida ? formatoHora(registro.salida) : "--"}`;
+
+                                }
+                            )
+
+                        ]
+                    );
+
+
+                doc.autoTable({
+
+                    startY:
+                        18,
+
+                    head: [
+                        encabezado
+                    ],
+
+                    body,
+
+                    theme:
+                        "grid",
+
+                    styles: {
+
+                        fontSize:
+                            5,
+
+                        cellPadding:
+                            1
+
+                    },
+
+                    columnStyles: {
+
+                        0: {
+                            cellWidth: 12
+                        },
+
+                        1: {
+                            cellWidth: 38
+                        }
+
+                    }
+
+                });
+
+            }
         );
 
-    }
-);
+
+    doc.save(
+        `asistencia_${mesInput.value}.pdf`
+    );
+
+}
 
 
 // ======================================================
-// CERRAR SESIÓN ADMIN
+// CERRAR SESIÓN
 // ======================================================
 
-cerrarSesionBtn.addEventListener(
-    "click",
+cerrarSesionBtn
+    .addEventListener(
+        "click",
+        () => {
 
-    () => {
-
-        localStorage.removeItem(
-            "admin_session"
-        );
+            localStorage.removeItem(
+                "admin_session"
+            );
 
 
-        window.location.replace(
-            "admin-login.html"
-        );
+            window.location.replace(
+                "admin-login.html"
+            );
 
-    }
-);
+        }
+    );
 
 
 // ======================================================
