@@ -216,7 +216,7 @@ function mostrarEstado(
 
 
     // ==========================================
-    // LE FALTA CONFIGURAR WEBAUTHN
+    // TODAVÍA NO CONFIGURÓ WEBAUTHN
     // ==========================================
 
     if (
@@ -237,6 +237,9 @@ function mostrarEstado(
 
         seguridadBtn.onclick =
             configurarWebAuthn;
+
+
+        mensaje("");
 
 
         return;
@@ -266,40 +269,66 @@ function mostrarEstado(
             verificarYRegistrarIngreso;
 
 
+        mensaje("");
+
+
         return;
 
     }
 
 
     // ==========================================
-    // YA TERMINÓ
+    // YA TIENE INGRESO Y EGRESO
     // ==========================================
-    
+
     if (data.salida) {
-    
+
         mensaje(
             "La jornada de hoy ya está registrada."
         );
-    
+
+
+        // Frenamos cualquier recordatorio
+        if (
+            intervaloRecordatorio
+        ) {
+
+            clearInterval(
+                intervaloRecordatorio
+            );
+
+
+            intervaloRecordatorio =
+                null;
+
+        }
+
+
         return;
+
     }
-    
-    
+
+
     // ==========================================
-    // PUEDE REGISTRAR EGRESO
+    // YA TIENE INGRESO
+    // TODAVÍA NO TIENE EGRESO
     // ==========================================
-    
+
     egresoBtn.hidden =
         false;
-    
+
+
     egresoBtn.disabled =
         false;
-    
-    
-    // PROGRAMAMOS EL RECORDATORIO
+
+
+    mensaje(
+        `Ingreso registrado a las ${horaArgentina(data.entrada)}.`
+    );
+
+
+    // Recordatorio 13:00 / 18:00
     programarRecordatorioEgreso();
-    
-    }
 
 }
 
@@ -653,15 +682,10 @@ async function registrarIngreso() {
     }
 
 
-    mensaje(
-        "Ingreso registrado correctamente."
-    );
-
-
     const estado =
         await obtenerEstado();
-
-
+    
+    
     mostrarEstado(
         estado
     );
