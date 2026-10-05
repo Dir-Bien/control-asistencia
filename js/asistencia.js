@@ -342,62 +342,65 @@ async function webauthn(
     extra = {}
 ) {
 
-    const {
-        data,
-        error
-    } =
-        await sb.functions.invoke(
-            "webauthn",
+    const respuesta =
+        await fetch(
+            `${SUPABASE_URL}/functions/v1/webauthn`,
             {
 
-                body: {
+                method:
+                    "POST",
 
-                    action,
+                headers: {
 
-                    token:
-                        obtenerTokenSesion(),
+                    "Content-Type":
+                        "application/json",
 
-                    device_id:
-                        obtenerDeviceId(),
+                    "apikey":
+                        SUPABASE_PUBLIC_KEY
 
-                    ...extra
+                },
 
-                }
+                body:
+                    JSON.stringify({
+
+                        action,
+
+                        token:
+                            obtenerTokenSesion(),
+
+                        device_id:
+                            obtenerDeviceId(),
+
+                        ...extra
+
+                    })
 
             }
         );
 
 
-    if (error) {
+    let data = null;
 
-        console.error(
-            "Edge Function:",
-            error
+
+    try {
+
+        data =
+            await respuesta.json();
+
+    } catch (_) {
+
+        throw new Error(
+            "La respuesta del servidor no es válida."
         );
-
-
-        let texto =
-            "No se pudo realizar la verificación de seguridad.";
-
-
-        try {
-
-            const detalle =
-                await error.context.json();
-
-            texto =
-                detalle.error
-                || texto;
-
-        } catch (_) {}
-
-
-        throw new Error(texto);
 
     }
 
 
-    if (!data?.ok) {
+    if (
+        !respuesta.ok
+        ||
+        !data?.ok
+    ) {
 
         throw new Error(
             data?.error
