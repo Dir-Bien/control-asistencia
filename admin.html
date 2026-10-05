@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Administración de Asistencia
+    </title>
+
+    <link rel="icon" href="data:,">
+
+    <link
+        rel="stylesheet"
+        href="css/admin.css"
+    >
+
+</head>
+
+<body>
+
+<main>
+
+    <header class="top">
+
+        <div>
+
+            <small>
+                CONTROL DE ASISTENCIA
+            </small>
+
+            <h1>
+                Panel administrativo
+            </h1>
+
+            <p id="adminNombre">
+                Verificando acceso...
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================================
+         VERIFICACIÓN BIOMÉTRICA
+    =========================================== -->
+
+    <section
+        id="seguridadPanel"
+        class="card seguridad-panel"
+    >
+
+        <h2>
+            Verificación de seguridad
+        </h2>
+
+        <p>
+            Para acceder a la información del personal,
+            verifique su identidad.
+        </p>
+
+        <button id="verificarBtn">
+            Verificar identidad
+        </button>
+
+    </section>
+
+
+    <!-- ==========================================
+         PANEL
+    =========================================== -->
+
+    <section
+        id="panel"
+        hidden
+    >
+
+        <div class="card filtros">
+
+            <div>
+
+                <label>
+                    Período
+                </label>
+
+                <select id="tipoPeriodo">
+
+                    <option value="dia">
+                        Día
+                    </option>
+
+                    <option value="mes">
+                        Mes completo
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div id="campoDia">
+
+                <label>
+                    Día
+                </label>
+
+                <input
+                    type="date"
+                    id="fecha"
+                >
+
+            </div>
+
+
+            <div
+                id="campoMes"
+                hidden
+            >
+
+                <label>
+                    Mes
+                </label>
+
+                <input
+                    type="month"
+                    id="mes"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Departamento
+                </label>
+
+                <select id="departamento">
+
+                    <option value="">
+                        Todos
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label>
+                    Grado
+                </label>
+
+                <select id="grado">
+
+                    <option value="">
+                        Todos
+                    </option>
+
+                    <option value="SV">
+                        SV
+                    </option>
+
+                    <option value="AC">
+                        AC
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="boton-filtro">
+
+                <button id="buscarBtn">
+                    Buscar
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="resumen">
+
+            <div class="mini-card">
+
+                <span>
+                    Registros
+                </span>
+
+                <strong id="cantidad">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="mini-card">
+
+                <span>
+                    Completos
+                </span>
+
+                <strong id="completos">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="mini-card">
+
+                <span>
+                    Sin egreso
+                </span>
+
+                <strong id="sinEgreso">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="mini-card">
+
+                <span>
+                    Sin registro
+                </span>
+
+                <strong id="sinRegistro">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="acciones">
+
+            <button
+                id="excelBtn"
+                disabled
+            >
+                Descargar Excel
+            </button>
+
+            <button
+                id="pdfBtn"
+                disabled
+            >
+                Descargar PDF
+            </button>
+
+        </div>
+
+
+        <p
+            id="mensaje"
+            class="mensaje"
+        ></p>
+
+
+        <div class="tabla-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Fecha
+                        </th>
+
+                        <th>
+                            Grado
+                        </th>
+
+                        <th>
+                            Apellido y nombre
+                        </th>
+
+                        <th>
+                            DNI
+                        </th>
+
+                        <th>
+                            Turno
+                        </th>
+
+                        <th>
+                            Ingreso
+                        </th>
+
+                        <th>
+                            Egreso
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="tablaBody">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+
+<script src="js/config.js"></script>
+
+<script src="js/admin.js"></script>
+
+</body>
+
+</html>
