@@ -272,6 +272,214 @@
 
         <div id="contenidoAsistencias"></div>
 
+        <hr class="separador">
+
+<section class="gestion-personal">
+
+    <div class="gestion-header">
+
+        <div>
+
+            <h2>
+                Gestión de personal
+            </h2>
+
+            <p>
+                Alta, modificación y dispositivos.
+            </p>
+
+        </div>
+
+        <button id="nuevoEmpleadoBtn">
+            Agregar empleado
+        </button>
+
+    </div>
+
+
+    <div class="busqueda-personal">
+
+        <input
+            id="buscarEmpleado"
+            type="text"
+            placeholder="Buscar por DNI, apellido o nombre..."
+        >
+
+        <button id="buscarEmpleadoBtn">
+            Buscar
+        </button>
+
+    </div>
+
+
+    <div class="tabla-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Grado
+                    </th>
+
+                    <th>
+                        Apellido y nombre
+                    </th>
+
+                    <th>
+                        DNI
+                    </th>
+
+                    <th>
+                        Departamento
+                    </th>
+
+                    <th>
+                        Estado
+                    </th>
+
+                    <th>
+                        Celular
+                    </th>
+
+                    <th>
+                        Acciones
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="empleadosBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<div
+    id="empleadoModal"
+    class="modal"
+    hidden
+>
+
+    <div class="modal-contenido">
+
+        <h2 id="modalTitulo">
+            Agregar empleado
+        </h2>
+
+
+        <input
+            type="hidden"
+            id="empleadoId"
+        >
+
+
+        <label>
+            DNI
+        </label>
+
+        <input
+            id="empleadoDni"
+            type="text"
+            inputmode="numeric"
+        >
+
+
+        <label>
+            Apellido
+        </label>
+
+        <input
+            id="empleadoApellido"
+            type="text"
+        >
+
+
+        <label>
+            Nombre
+        </label>
+
+        <input
+            id="empleadoNombre"
+            type="text"
+        >
+
+
+        <label>
+            Grado
+        </label>
+
+        <select id="empleadoGrado">
+
+            <option value="SV">
+                SV
+            </option>
+
+            <option value="AC">
+                AC
+            </option>
+
+        </select>
+
+
+        <label>
+            Departamento
+        </label>
+
+        <select id="empleadoDepartamento">
+        </select>
+
+
+        <label>
+            Nueva contraseña
+        </label>
+
+        <input
+            id="empleadoPassword"
+            type="text"
+            placeholder="Vacío = automática / no cambiar"
+        >
+
+
+        <label class="checkbox">
+
+            <input
+                id="empleadoActivo"
+                type="checkbox"
+                checked
+            >
+
+            Usuario activo
+
+        </label>
+
+
+        <div class="modal-acciones">
+
+            <button id="guardarEmpleadoBtn">
+                Guardar
+            </button>
+
+            <button
+                id="cancelarEmpleadoBtn"
+                class="btn-secundario"
+            >
+                Cancelar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+        
     </section>
 
 </main>
