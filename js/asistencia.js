@@ -1118,7 +1118,7 @@ async function revisarRecordatorioEgreso() {
 // ==========================================================
 
 notificacionesBtn
-    .addEventListener(
+    ?.addEventListener(
         "click",
         async () => {
 
