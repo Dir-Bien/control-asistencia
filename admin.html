@@ -1,9 +1,7 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -11,9 +9,7 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>
-        Administración de Asistencia
-    </title>
+    <title>Panel administrativo</title>
 
     <link rel="icon" href="data:,">
 
@@ -21,7 +17,6 @@
         rel="stylesheet"
         href="css/admin.css"
     >
-
 </head>
 
 <body>
@@ -46,37 +41,15 @@
 
         </div>
 
-    </header>
-
-
-    <!-- ==========================================
-         VERIFICACIÓN BIOMÉTRICA
-    =========================================== -->
-
-    <section
-        id="seguridadPanel"
-        class="card seguridad-panel"
-    >
-
-        <h2>
-            Verificación de seguridad
-        </h2>
-
-        <p>
-            Para acceder a la información del personal,
-            verifique su identidad.
-        </p>
-
-        <button id="verificarBtn">
-            Verificar identidad
+        <button
+            id="cerrarSesionBtn"
+            style="width:auto;"
+        >
+            Cerrar sesión
         </button>
 
-    </section>
+    </header>
 
-
-    <!-- ==========================================
-         PANEL
-    =========================================== -->
 
     <section
         id="panel"
@@ -179,7 +152,7 @@
             </div>
 
 
-            <div class="boton-filtro">
+            <div>
 
                 <button id="buscarBtn">
                     Buscar
@@ -284,6 +257,10 @@
                         </th>
 
                         <th>
+                            Departamento
+                        </th>
+
+                        <th>
                             Grado
                         </th>
 
@@ -329,19 +306,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
-
 <script src="js/config.js"></script>
 
 <script src="js/admin.js"></script>
 
 </body>
-
 </html>
