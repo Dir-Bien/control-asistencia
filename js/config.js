@@ -188,3 +188,48 @@ function obtenerUbicacion() {
     );
 
 }
+function esCelular() {
+
+    if (
+        navigator.userAgentData
+        &&
+        typeof navigator.userAgentData.mobile
+            === "boolean"
+    ) {
+
+        return navigator
+            .userAgentData
+            .mobile;
+
+    }
+
+
+    const userAgent =
+        navigator.userAgent
+        || "";
+
+
+    return /Android|iPhone|iPod|Mobile/i
+        .test(
+            userAgent
+        );
+
+}
+
+
+function bloquearPC() {
+
+    if (!esCelular()) {
+
+        window.location.replace(
+            "bloqueado.html"
+        );
+
+        return true;
+
+    }
+
+
+    return false;
+
+}
