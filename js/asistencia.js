@@ -41,6 +41,13 @@ const egresoBtn =
 const mensajeEl =
     document.getElementById("mensaje");
 
+const notificacionesBtn =
+    document.getElementById(
+        "notificacionesBtn"
+    );
+
+let intervaloRecordatorio = null;
+
 
 let estadoActual = null;
 
@@ -267,27 +274,32 @@ function mostrarEstado(
     // ==========================================
     // YA TERMINÓ
     // ==========================================
-
+    
     if (data.salida) {
-
+    
         mensaje(
             "La jornada de hoy ya está registrada."
         );
-
+    
         return;
-
     }
-
-
+    
+    
     // ==========================================
     // PUEDE REGISTRAR EGRESO
     // ==========================================
-
+    
     egresoBtn.hidden =
         false;
-
+    
     egresoBtn.disabled =
         false;
+    
+    
+    // PROGRAMAMOS EL RECORDATORIO
+    programarRecordatorioEgreso();
+    
+    }
 
 }
 
@@ -759,6 +771,339 @@ egresoBtn.addEventListener(
 
     }
 );
+
+// ==========================================================
+// NOTIFICACIONES
+// ==========================================================
+
+async function activarNotificaciones() {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        mensaje(
+            "Este navegador no admite notificaciones.",
+            true
+        );
+
+        return false;
+    }
+
+
+    if (
+        Notification.permission === "granted"
+    ) {
+
+        notificacionesBtn.hidden = true;
+
+        return true;
+    }
+
+
+    if (
+        Notification.permission === "denied"
+    ) {
+
+        mensaje(
+            "Las notificaciones están bloqueadas. Tenés que habilitarlas desde los permisos del navegador.",
+            true
+        );
+
+        return false;
+    }
+
+
+    const permiso =
+        await Notification.requestPermission();
+
+
+    if (
+        permiso === "granted"
+    ) {
+
+        notificacionesBtn.hidden =
+            true;
+
+
+        mensaje(
+            "Recordatorios activados."
+        );
+
+
+        return true;
+    }
+
+
+    return false;
+}
+
+
+// ==========================================================
+// MOSTRAR BOTÓN SI FALTA PERMISO
+// ==========================================================
+
+function comprobarPermisoNotificaciones() {
+
+    if (
+        !("Notification" in window)
+    ) {
+
+        return;
+    }
+
+
+    if (
+        Notification.permission !== "granted"
+        &&
+        estadoActual?.entrada
+        &&
+        !estadoActual?.salida
+    ) {
+
+        notificacionesBtn.hidden =
+            false;
+
+    } else {
+
+        notificacionesBtn.hidden =
+            true;
+
+    }
+
+}
+
+
+// ==========================================================
+// HORA ARGENTINA
+// ==========================================================
+
+function obtenerHoraArgentina() {
+
+    const partes =
+        new Intl.DateTimeFormat(
+            "en-US",
+            {
+                timeZone:
+                    "America/Argentina/Buenos_Aires",
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit",
+
+                hour12:
+                    false
+            }
+        )
+        .formatToParts(
+            new Date()
+        );
+
+
+    return {
+
+        hora:
+            Number(
+                partes.find(
+                    p =>
+                        p.type === "hour"
+                )?.value
+            ),
+
+        minuto:
+            Number(
+                partes.find(
+                    p =>
+                        p.type === "minute"
+                )?.value
+            )
+
+    };
+
+}
+
+
+// ==========================================================
+// PROGRAMAR RECORDATORIO
+// ==========================================================
+
+function programarRecordatorioEgreso() {
+
+    if (
+        intervaloRecordatorio
+    ) {
+
+        clearInterval(
+            intervaloRecordatorio
+        );
+
+    }
+
+
+    if (
+        !estadoActual?.entrada
+        ||
+        estadoActual?.salida
+        ||
+        !estadoActual?.turno
+    ) {
+
+        return;
+
+    }
+
+
+    comprobarPermisoNotificaciones();
+
+
+    intervaloRecordatorio =
+        setInterval(
+            revisarRecordatorioEgreso,
+            30000
+        );
+
+
+    revisarRecordatorioEgreso();
+
+}
+
+
+// ==========================================================
+// REVISAR SI HAY QUE NOTIFICAR
+// ==========================================================
+
+async function revisarRecordatorioEgreso() {
+
+    if (
+        !estadoActual?.entrada
+        ||
+        estadoActual?.salida
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        hora,
+        minuto
+    } =
+        obtenerHoraArgentina();
+
+
+    const horaObjetivo =
+        estadoActual.turno === "MANANA"
+            ? 13
+            : 18;
+
+
+    // Permitimos una ventana de 10 minutos.
+    // Esto ayuda si el navegador ralentiza timers.
+    if (
+        hora !== horaObjetivo
+        ||
+        minuto > 10
+    ) {
+
+        return;
+
+    }
+
+
+    const clave =
+        `recordatorio-egreso-${estadoActual.fecha}`;
+
+
+    // Ya notificamos hoy.
+    if (
+        localStorage.getItem(
+            clave
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        // Volvemos a consultar Supabase antes
+        // de notificar por si ya registró egreso.
+
+        const estadoNuevo =
+            await obtenerEstado();
+
+
+        if (
+            !estadoNuevo?.entrada
+            ||
+            estadoNuevo?.salida
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            Notification.permission
+            === "granted"
+        ) {
+
+            new Notification(
+                "Control de asistencia",
+                {
+                    body:
+                        "No olvides registrar egreso."
+                }
+            );
+
+
+            localStorage.setItem(
+                clave,
+                "1"
+            );
+
+
+            mensaje(
+                "No olvides registrar egreso."
+            );
+
+        }
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "Error comprobando recordatorio:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==========================================================
+// BOTÓN ACTIVAR NOTIFICACIONES
+// ==========================================================
+
+notificacionesBtn
+    .addEventListener(
+        "click",
+        async () => {
+
+            await activarNotificaciones();
+
+            programarRecordatorioEgreso();
+
+        }
+    );
 
 
 // ==========================================================
