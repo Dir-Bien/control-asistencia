@@ -1,94 +1,69 @@
-const {
-    startAuthentication
-} = SimpleWebAuthnBrowser;
-
-
-const seguridadPanel =
-    document.getElementById(
-        "seguridadPanel"
-    );
-
 const panel =
-    document.getElementById(
-        "panel"
-    );
-
-const verificarBtn =
-    document.getElementById(
-        "verificarBtn"
-    );
+    document.getElementById("panel");
 
 const adminNombre =
-    document.getElementById(
-        "adminNombre"
-    );
+    document.getElementById("adminNombre");
 
 const tipoPeriodo =
-    document.getElementById(
-        "tipoPeriodo"
-    );
+    document.getElementById("tipoPeriodo");
 
 const fechaInput =
-    document.getElementById(
-        "fecha"
-    );
+    document.getElementById("fecha");
 
 const mesInput =
-    document.getElementById(
-        "mes"
-    );
+    document.getElementById("mes");
 
 const campoDia =
-    document.getElementById(
-        "campoDia"
-    );
+    document.getElementById("campoDia");
 
 const campoMes =
-    document.getElementById(
-        "campoMes"
-    );
+    document.getElementById("campoMes");
 
 const departamentoSelect =
-    document.getElementById(
-        "departamento"
-    );
+    document.getElementById("departamento");
 
 const gradoSelect =
-    document.getElementById(
-        "grado"
-    );
+    document.getElementById("grado");
 
 const buscarBtn =
-    document.getElementById(
-        "buscarBtn"
-    );
+    document.getElementById("buscarBtn");
 
 const excelBtn =
-    document.getElementById(
-        "excelBtn"
-    );
+    document.getElementById("excelBtn");
 
 const pdfBtn =
-    document.getElementById(
-        "pdfBtn"
-    );
+    document.getElementById("pdfBtn");
 
 const tablaBody =
-    document.getElementById(
-        "tablaBody"
-    );
+    document.getElementById("tablaBody");
 
 const mensajeEl =
-    document.getElementById(
-        "mensaje"
-    );
+    document.getElementById("mensaje");
+
+const cerrarSesionBtn =
+    document.getElementById("cerrarSesionBtn");
 
 
 let filasActuales = [];
 
+let adminActual = null;
+
 
 // ======================================================
-// FECHA ARGENTINA
+// ADMIN TOKEN
+// ======================================================
+
+function obtenerAdminToken() {
+
+    return localStorage.getItem(
+        "admin_session"
+    );
+
+}
+
+
+// ======================================================
+// FECHA DE ARGENTINA
 // ======================================================
 
 function fechaArgentina() {
@@ -134,7 +109,6 @@ function fechaArgentina() {
 
 
     return `${year}-${month}-${day}`;
-
 }
 
 
@@ -170,73 +144,115 @@ function mensaje(
         error
             ? "mensaje error"
             : "mensaje ok";
-
 }
 
 
 // ======================================================
-// ESTADO ADMIN
+// COMPROBAR ADMIN
 // ======================================================
 
 async function comprobarAdmin() {
 
-    function obtenerAdminToken() {
-    
-        return localStorage.getItem(
-            "admin_session"
+    const token =
+        obtenerAdminToken();
+
+
+    if (!token) {
+
+        window.location.replace(
+            "admin-login.html"
         );
-    
+
+        return;
     }
-    
-    const {
-        data,
-        error
-    } =
-        await sb.rpc(
-            "admin_estado",
-            {
-
-                p_token:
-                    token,
-
-                p_device_id:
-                    obtenerDeviceId()
-
-            }
-        );
 
 
-    if (
-        error
-        ||
-        !data?.ok
-    ) {
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await sb.rpc(
+                "admin_estado",
+                {
+
+                    p_token:
+                        token,
+
+                    p_device_id:
+                        obtenerDeviceId()
+
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                error
+            );
+
+            throw new Error(
+                "No se pudo verificar la sesión."
+            );
+
+        }
+
+
+        if (!data?.ok) {
+
+            localStorage.removeItem(
+                "admin_session"
+            );
+
+
+            window.location.replace(
+                "admin-login.html"
+            );
+
+            return;
+
+        }
+
+
+        adminActual =
+            data;
+
 
         adminNombre.textContent =
-            data?.error
-            ||
+            `Usuario: ${data.usuario}`;
+
+
+        cargarDepartamentos(
+            data.departamentos
+        );
+
+
+        panel.hidden =
+            false;
+
+
+        await cargarReporte();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        adminNombre.textContent =
             "Acceso no autorizado";
 
 
-        verificarBtn.disabled =
-            true;
-
-
-        return null;
+        mensaje(
+            error.message,
+            true
+        );
 
     }
-
-
-    adminNombre.textContent =
-        `${data.apellido}, ${data.nombre}`;
-
-
-    cargarDepartamentos(
-        data.departamentos
-    );
-
-
-    return data;
 
 }
 
@@ -250,11 +266,33 @@ function cargarDepartamentos(
 ) {
 
     departamentoSelect.innerHTML =
-        `
-        <option value="">
-            Todos
-        </option>
-        `;
+        "";
+
+
+    if (
+        adminActual.departamento_id === 0
+    ) {
+
+        const todos =
+            document.createElement(
+                "option"
+            );
+
+
+        todos.value =
+            "";
+
+
+        todos.textContent =
+            "Todos";
+
+
+        departamentoSelect
+            .appendChild(
+                todos
+            );
+
+    }
 
 
     departamentos.forEach(
@@ -282,167 +320,26 @@ function cargarDepartamentos(
         }
     );
 
-}
 
+    // Si el admin pertenece a un solo departamento,
+    // no puede cambiarlo.
 
-// ======================================================
-// WEBAUTHN
-// ======================================================
+    if (
+        adminActual.departamento_id !== 0
+    ) {
 
-async function llamarWebAuthn(
-    action,
-    extra = {}
-) {
-
-    const {
-        data,
-        error
-    } =
-        await sb.functions.invoke(
-            "webauthn",
-            {
-
-                body: {
-
-                    action,
-
-                    token:
-                        obtenerTokenSesion(),
-
-                    device_id:
-                        obtenerDeviceId(),
-
-                    ...extra
-
-                }
-
-            }
-        );
-
-
-    if (error) {
-
-        let texto =
-            "Error de verificación.";
-
-
-        try {
-
-            const detalle =
-                await error.context.json();
-
-
-            texto =
-                detalle.error
-                || texto;
-
-        } catch (_) {}
-
-
-        throw new Error(
-            texto
-        );
-
-    }
-
-
-    if (!data?.ok) {
-
-        throw new Error(
-            data?.error
-            ||
-            "No se pudo verificar."
-        );
-
-    }
-
-
-    return data;
-
-}
-
-
-async function verificarWebAuthn() {
-
-    const inicio =
-        await llamarWebAuthn(
-            "auth-options"
-        );
-
-
-    const respuesta =
-        await startAuthentication({
-
-            optionsJSON:
-                inicio.options
-
-        });
-
-
-    await llamarWebAuthn(
-        "auth-verify",
-        {
-
-            response:
-                respuesta
-
-        }
-    );
-
-}
-
-
-// ======================================================
-// ENTRAR AL PANEL
-// ======================================================
-
-verificarBtn.addEventListener(
-    "click",
-
-    async () => {
-
-        verificarBtn.disabled =
-            true;
-
-
-        verificarBtn.textContent =
-            "Verificando...";
-
-
-        try {
-
-            await verificarWebAuthn();
-
-
-            seguridadPanel.hidden =
-                true;
-
-
-            panel.hidden =
-                false;
-
-
-            await cargarReporte();
-
-
-        } catch (error) {
-
-            verificarBtn.disabled =
-                false;
-
-
-            verificarBtn.textContent =
-                "Verificar identidad";
-
-
-            alert(
-                error.message
+        departamentoSelect.value =
+            String(
+                adminActual.departamento_id
             );
 
-        }
+
+        departamentoSelect.disabled =
+            true;
 
     }
-);
+
+}
 
 
 // ======================================================
@@ -454,17 +351,17 @@ tipoPeriodo.addEventListener(
 
     () => {
 
-        const mes =
+        const esMes =
             tipoPeriodo.value
             === "mes";
 
 
         campoDia.hidden =
-            mes;
+            esMes;
 
 
         campoMes.hidden =
-            !mes;
+            !esMes;
 
     }
 );
@@ -473,7 +370,8 @@ tipoPeriodo.addEventListener(
 function rangoSeleccionado() {
 
     if (
-        tipoPeriodo.value === "dia"
+        tipoPeriodo.value
+        === "dia"
     ) {
 
         return {
@@ -521,7 +419,7 @@ function rangoSeleccionado() {
 
 
 // ======================================================
-// REPORTE
+// CARGAR REPORTE
 // ======================================================
 
 async function cargarReporte() {
@@ -531,7 +429,7 @@ async function cargarReporte() {
 
 
     mensaje(
-        "Cargando información..."
+        "Cargando..."
     );
 
 
@@ -541,17 +439,25 @@ async function cargarReporte() {
             rangoSeleccionado();
 
 
-        const departamento =
+        let departamento =
+            null;
+
+
+        if (
             departamentoSelect.value
-                ? Number(
+        ) {
+
+            departamento =
+                Number(
                     departamentoSelect.value
-                )
-                : null;
+                );
+
+        }
 
 
         const grado =
             gradoSelect.value
-                || null;
+            || null;
 
 
         const {
@@ -600,19 +506,6 @@ async function cargarReporte() {
 
         if (!data?.ok) {
 
-            if (
-                data?.requiere_webauthn
-            ) {
-
-                seguridadPanel.hidden =
-                    false;
-
-                panel.hidden =
-                    true;
-
-            }
-
-
             throw new Error(
                 data?.error
                 ||
@@ -623,7 +516,8 @@ async function cargarReporte() {
 
 
         filasActuales =
-            data.datos || [];
+            data.datos
+            || [];
 
 
         mostrarTabla();
@@ -655,7 +549,7 @@ buscarBtn.addEventListener(
 
 
 // ======================================================
-// HORAS
+// FORMATO HORA
 // ======================================================
 
 function formatoHora(
@@ -663,7 +557,9 @@ function formatoHora(
 ) {
 
     if (!fecha) {
+
         return "-";
+
     }
 
 
@@ -698,47 +594,8 @@ function mostrarTabla() {
         "";
 
 
-    let departamentoAnterior =
-        null;
-
-
     filasActuales.forEach(
         fila => {
-
-
-            if (
-                fila.departamento
-                !== departamentoAnterior
-            ) {
-
-                departamentoAnterior =
-                    fila.departamento;
-
-
-                const encabezado =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                encabezado.className =
-                    "departamento-row";
-
-
-                encabezado.innerHTML =
-                    `
-                    <td colspan="8">
-                        ${fila.departamento}
-                    </td>
-                    `;
-
-
-                tablaBody.appendChild(
-                    encabezado
-                );
-
-            }
-
 
             const tr =
                 document.createElement(
@@ -746,10 +603,39 @@ function mostrarTabla() {
                 );
 
 
+            let turno =
+                "-";
+
+
+            if (
+                fila.turno === "MANANA"
+            ) {
+
+                turno =
+                    "Mañana";
+
+            }
+
+
+            if (
+                fila.turno === "TARDE"
+            ) {
+
+                turno =
+                    "Tarde";
+
+            }
+
+
             tr.innerHTML =
                 `
+
                 <td>
                     ${fila.fecha}
+                </td>
+
+                <td>
+                    ${fila.departamento}
                 </td>
 
                 <td>
@@ -765,13 +651,7 @@ function mostrarTabla() {
                 </td>
 
                 <td>
-                    ${
-                        fila.turno === "MANANA"
-                            ? "Mañana"
-                            : fila.turno === "TARDE"
-                                ? "Tarde"
-                                : "-"
-                    }
+                    ${turno}
                 </td>
 
                 <td>
@@ -785,12 +665,14 @@ function mostrarTabla() {
                 <td>
                     ${fila.estado}
                 </td>
+
                 `;
 
 
-            tablaBody.appendChild(
-                tr
-            );
+            tablaBody
+                .appendChild(
+                    tr
+                );
 
         }
     );
@@ -798,22 +680,25 @@ function mostrarTabla() {
 
     const completos =
         filasActuales.filter(
-            x =>
-                x.estado === "COMPLETO"
+            fila =>
+                fila.estado
+                === "COMPLETO"
         ).length;
 
 
     const sinEgreso =
         filasActuales.filter(
-            x =>
-                x.estado === "SIN EGRESO"
+            fila =>
+                fila.estado
+                === "SIN EGRESO"
         ).length;
 
 
     const sinRegistro =
         filasActuales.filter(
-            x =>
-                x.estado === "SIN REGISTRO"
+            fila =>
+                fila.estado
+                === "SIN REGISTRO"
         ).length;
 
 
@@ -852,7 +737,7 @@ function mostrarTabla() {
 
 
 // ======================================================
-// DATOS PARA EXPORTAR
+// EXPORTAR
 // ======================================================
 
 function datosExportacion() {
@@ -913,14 +798,10 @@ excelBtn.addEventListener(
 
     () => {
 
-        const datos =
-            datosExportacion();
-
-
         const hoja =
             XLSX.utils
                 .json_to_sheet(
-                    datos
+                    datosExportacion()
                 );
 
 
@@ -968,9 +849,6 @@ pdfBtn.addEventListener(
             });
 
 
-        doc.setFontSize(15);
-
-
         doc.text(
             "Reporte de asistencias",
             14,
@@ -981,25 +859,25 @@ pdfBtn.addEventListener(
         const filas =
             datosExportacion()
                 .map(
-                    x => [
+                    dato => [
 
-                        x.Fecha,
+                        dato.Fecha,
 
-                        x.Departamento,
+                        dato.Departamento,
 
-                        x.Grado,
+                        dato.Grado,
 
-                        `${x.Apellido}, ${x.Nombre}`,
+                        `${dato.Apellido}, ${dato.Nombre}`,
 
-                        x.DNI,
+                        dato.DNI,
 
-                        x.Turno,
+                        dato.Turno,
 
-                        x.Ingreso,
+                        dato.Ingreso,
 
-                        x.Egreso,
+                        dato.Egreso,
 
-                        x.Estado
+                        dato.Estado
 
                     ]
                 );
@@ -1044,6 +922,28 @@ pdfBtn.addEventListener(
 
         doc.save(
             "asistencias.pdf"
+        );
+
+    }
+);
+
+
+// ======================================================
+// CERRAR SESIÓN ADMIN
+// ======================================================
+
+cerrarSesionBtn.addEventListener(
+    "click",
+
+    () => {
+
+        localStorage.removeItem(
+            "admin_session"
+        );
+
+
+        window.location.replace(
+            "admin-login.html"
         );
 
     }
