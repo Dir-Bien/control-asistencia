@@ -2,131 +2,269 @@
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
-    padding: 24px;
 
-    background: #f1f4f8;
-
-    color: #182230;
+:root {
 
     font-family:
+        Inter,
         Arial,
         Helvetica,
         sans-serif;
+
+    background:
+        #f1f4f8;
+
+    color:
+        #172033;
+
 }
+
+
+body {
+
+    margin: 0;
+
+    padding:
+        24px;
+
+}
+
 
 main {
-    max-width: 1450px;
-    margin: auto;
+
+    max-width:
+        1600px;
+
+    margin:
+        auto;
+
 }
+
+
+/* ========================================
+   HEADER
+======================================== */
 
 .top {
-    margin-bottom: 20px;
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+
+    margin-bottom:
+        22px;
+
 }
+
 
 .top small {
-    color: #667085;
-    font-weight: bold;
-    letter-spacing: 1px;
+
+    color:
+        #667085;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.2px;
+
 }
+
 
 .top h1 {
+
     margin:
-        8px
-        0
-        4px;
+        7px 0 4px;
+
+    font-size:
+        30px;
+
 }
+
 
 .top p {
+
     margin: 0;
-    color: #667085;
+
+    color:
+        #667085;
+
 }
+
+
+.btn-cerrar {
+
+    width:
+        auto !important;
+
+}
+
+
+/* ========================================
+   GENERAL
+======================================== */
 
 .card {
-    background: white;
 
-    padding: 20px;
+    background:
+        white;
 
-    border-radius: 15px;
+    border-radius:
+        15px;
+
+    padding:
+        18px;
 
     box-shadow:
-        0 5px 25px
-        rgba(0, 0, 0, 0.06);
+        0 5px 20px
+        rgba(
+            20,
+            30,
+            50,
+            0.06
+        );
+
 }
 
-.seguridad-panel {
-    max-width: 500px;
+
+button {
+
+    min-height:
+        44px;
+
+    padding:
+        0 18px;
+
+    border:
+        0;
+
+    border-radius:
+        9px;
+
+    background:
+        #182230;
+
+    color:
+        white;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
 }
+
+
+button:disabled {
+
+    opacity:
+        .5;
+
+    cursor:
+        not-allowed;
+
+}
+
+
+.btn-secundario {
+
+    background:
+        #e9edf3;
+
+    color:
+        #182230;
+
+}
+
+
+/* ========================================
+   FILTROS
+======================================== */
 
 .filtros {
+
     display: grid;
 
     grid-template-columns:
         repeat(
             5,
-            minmax(150px, 1fr)
-        );
+            minmax(
+                140px,
+                1fr
+            )
+        )
+        auto;
 
-    gap: 14px;
+    gap:
+        14px;
 
-    align-items: end;
+    align-items:
+        end;
+
 }
+
 
 label {
-    display: block;
 
-    margin-bottom: 6px;
+    display:
+        block;
 
-    font-size: 13px;
+    margin-bottom:
+        6px;
 
-    font-weight: bold;
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+
 }
 
-select,
-input,
-button {
-    width: 100%;
-
-    min-height: 44px;
-
-    border-radius: 9px;
-
-    font-size: 14px;
-}
 
 select,
 input {
-    padding: 0 10px;
+
+    width:
+        100%;
+
+    min-height:
+        44px;
+
+    padding:
+        0 10px;
 
     border:
         1px solid
         #d0d5dd;
 
-    background: white;
+    border-radius:
+        9px;
+
+    background:
+        white;
+
+    font-size:
+        14px;
+
 }
 
-button {
-    border: 0;
 
-    padding: 0 15px;
-
-    background: #182230;
-
-    color: white;
-
-    font-weight: bold;
-
-    cursor: pointer;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+/* ========================================
+   RESUMEN
+======================================== */
 
 .resumen {
-    display: grid;
+
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
@@ -134,127 +272,750 @@ button:disabled {
             1fr
         );
 
-    gap: 12px;
+    gap:
+        12px;
 
-    margin: 18px 0;
+    margin:
+        18px 0;
+
 }
 
+
 .mini-card {
-    background: white;
 
-    padding: 15px;
+    padding:
+        16px;
 
-    border-radius: 12px;
+    border-radius:
+        13px;
+
+    background:
+        white;
 
     box-shadow:
         0 3px 15px
-        rgba(0, 0, 0, 0.05);
+        rgba(
+            20,
+            30,
+            50,
+            .05
+        );
+
 }
+
 
 .mini-card span {
-    display: block;
 
-    color: #667085;
+    display:
+        block;
 
-    font-size: 12px;
+    color:
+        #667085;
+
+    font-size:
+        12px;
+
 }
+
 
 .mini-card strong {
-    display: block;
 
-    margin-top: 5px;
+    display:
+        block;
 
-    font-size: 22px;
+    margin-top:
+        5px;
+
+    font-size:
+        24px;
+
 }
+
+
+/* ========================================
+   EXPORTAR
+======================================== */
 
 .acciones {
-    display: flex;
-    gap: 10px;
 
-    margin-bottom: 15px;
+    display:
+        flex;
+
+    gap:
+        10px;
+
+    margin-bottom:
+        15px;
+
 }
 
-.acciones button {
-    width: auto;
+
+.btn-exportar {
+
+    width:
+        auto;
+
 }
 
-.tabla-wrapper {
-    overflow-x: auto;
 
-    background: white;
+/* ========================================
+   DEPARTAMENTO
+======================================== */
 
-    border-radius: 12px;
+.departamento-card {
+
+    margin-bottom:
+        22px;
+
+    background:
+        white;
+
+    border-radius:
+        16px;
+
+    overflow:
+        hidden;
+
+    box-shadow:
+        0 5px 22px
+        rgba(
+            20,
+            30,
+            50,
+            .06
+        );
+
 }
 
-table {
-    width: 100%;
 
-    border-collapse: collapse;
+.departamento-header {
 
-    min-width: 950px;
-}
+    display:
+        flex;
 
-th,
-td {
-    padding: 10px;
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+
+    padding:
+        16px 18px;
 
     border-bottom:
         1px solid
-        #eaecf0;
+        #e8ecf2;
 
-    text-align: left;
-
-    font-size: 13px;
 }
+
+
+.departamento-header h2 {
+
+    margin:
+        0 0 3px;
+
+    font-size:
+        19px;
+
+}
+
+
+.departamento-header span {
+
+    color:
+        #667085;
+
+    font-size:
+        12px;
+
+}
+
+
+/* ========================================
+   TABLAS
+======================================== */
+
+.tabla-wrapper {
+
+    width:
+        100%;
+
+    overflow-x:
+        auto;
+
+}
+
+
+table {
+
+    width:
+        100%;
+
+    border-collapse:
+        separate;
+
+    border-spacing:
+        0;
+
+}
+
 
 th {
-    background: #f8fafc;
+
+    padding:
+        10px;
+
+    background:
+        #f7f9fc;
+
+    border-bottom:
+        1px solid
+        #e4e7ec;
+
+    color:
+        #475467;
+
+    font-size:
+        12px;
+
+    text-align:
+        left;
+
+    white-space:
+        nowrap;
+
 }
 
-.departamento-row td {
-    background: #e9eef5;
 
-    font-weight: bold;
+td {
 
-    font-size: 14px;
+    padding:
+        10px;
+
+    border-bottom:
+        1px solid
+        #eef1f5;
+
+    font-size:
+        13px;
+
 }
+
+
+tbody tr:last-child td {
+
+    border-bottom:
+        0;
+
+}
+
+
+.persona {
+
+    font-weight:
+        600;
+
+}
+
+
+.hora {
+
+    font-variant-numeric:
+        tabular-nums;
+
+}
+
+
+/* ========================================
+   ESTADO DIARIO
+======================================== */
+
+.estado {
+
+    display:
+        inline-block;
+
+    padding:
+        5px 8px;
+
+    border-radius:
+        20px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
+}
+
+
+.estado-completo {
+
+    background:
+        #ecfdf3;
+
+    color:
+        #067647;
+
+}
+
+
+.estado-pendiente {
+
+    background:
+        #fffaeb;
+
+    color:
+        #b54708;
+
+}
+
+
+.estado-faltante {
+
+    background:
+        #fef3f2;
+
+    color:
+        #b42318;
+
+}
+
+
+/* ========================================
+   VISTA MENSUAL
+======================================== */
+
+.tabla-mes {
+
+    width:
+        max-content;
+
+    min-width:
+        100%;
+
+}
+
+
+.tabla-mes th,
+.tabla-mes td {
+
+    border-right:
+        1px solid
+        #edf0f4;
+
+}
+
+
+.dia-col {
+
+    min-width:
+        72px;
+
+    text-align:
+        center;
+
+}
+
+
+.numero-dia {
+
+    display:
+        block;
+
+    color:
+        #172033 !important;
+
+    font-size:
+        13px !important;
+
+    font-weight:
+        800;
+
+}
+
+
+.nombre-dia {
+
+    display:
+        block;
+
+    margin-top:
+        2px;
+
+    text-transform:
+        capitalize;
+
+    color:
+        #98a2b3 !important;
+
+    font-size:
+        10px !important;
+
+}
+
+
+.dia-celda {
+
+    min-width:
+        72px;
+
+    height:
+        54px;
+
+    padding:
+        6px !important;
+
+    text-align:
+        center;
+
+    font-size:
+        11px;
+
+    font-variant-numeric:
+        tabular-nums;
+
+}
+
+
+.hora-entrada,
+.hora-salida {
+
+    display:
+        block;
+
+}
+
+
+.separador-horas {
+
+    display:
+        none;
+
+}
+
+
+.dia-celda.completo {
+
+    background:
+        #ecfdf3;
+
+    color:
+        #067647;
+
+}
+
+
+.dia-celda.sin-egreso {
+
+    background:
+        #fffaeb;
+
+    color:
+        #b54708;
+
+}
+
+
+.dia-celda.sin-registro {
+
+    background:
+        #fafafa;
+
+    color:
+        #98a2b3;
+
+}
+
+
+.sin-dato {
+
+    font-size:
+        18px;
+
+}
+
+
+/* ========================================
+   COLUMNAS FIJAS
+======================================== */
+
+.sticky-col {
+
+    position:
+        sticky;
+
+    z-index:
+        3;
+
+    background:
+        white;
+
+}
+
+
+thead .sticky-col {
+
+    z-index:
+        5;
+
+    background:
+        #f7f9fc;
+
+}
+
+
+.grado-col {
+
+    left:
+        0;
+
+    width:
+        60px;
+
+    min-width:
+        60px;
+
+}
+
+
+.nombre-col {
+
+    left:
+        60px;
+
+    width:
+        210px;
+
+    min-width:
+        210px;
+
+    border-right:
+        2px solid
+        #dce2ea !important;
+
+}
+
+
+.persona-mes strong {
+
+    display:
+        block;
+
+    white-space:
+        nowrap;
+
+}
+
+
+.persona-mes small {
+
+    display:
+        block;
+
+    margin-top:
+        3px;
+
+    color:
+        #98a2b3;
+
+}
+
+
+/* ========================================
+   LEYENDA
+======================================== */
+
+.leyenda {
+
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        7px;
+
+}
+
+
+.leyenda-item {
+
+    padding:
+        5px 8px;
+
+    border-radius:
+        15px;
+
+    font-size:
+        10px !important;
+
+    font-weight:
+        700;
+
+}
+
+
+.leyenda-completo {
+
+    background:
+        #ecfdf3;
+
+    color:
+        #067647 !important;
+
+}
+
+
+.leyenda-pendiente {
+
+    background:
+        #fffaeb;
+
+    color:
+        #b54708 !important;
+
+}
+
+
+.leyenda-faltante {
+
+    background:
+        #fef3f2;
+
+    color:
+        #b42318 !important;
+
+}
+
+
+/* ========================================
+   MENSAJES
+======================================== */
 
 .mensaje {
-    min-height: 22px;
+
+    min-height:
+        22px;
+
+    margin:
+        10px 0;
+
 }
+
 
 .mensaje.error {
-    color: #b42318;
+
+    color:
+        #b42318;
+
 }
+
 
 .mensaje.ok {
-    color: #067647;
+
+    color:
+        #067647;
+
 }
 
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
 @media (
-    max-width: 900px
+    max-width:
+        1000px
 ) {
 
     body {
-        padding: 12px;
+
+        padding:
+            12px;
+
     }
+
+
+    .top {
+
+        align-items:
+            flex-start;
+
+    }
+
 
     .filtros {
-        grid-template-columns:
-            1fr;
-    }
 
-    .resumen {
         grid-template-columns:
             1fr
             1fr;
+
     }
+
+
+    .resumen {
+
+        grid-template-columns:
+            1fr
+            1fr;
+
+    }
+
+}
+
+
+@media (
+    max-width:
+        600px
+) {
+
+    .filtros {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .resumen {
+
+        grid-template-columns:
+            1fr
+            1fr;
+
+    }
+
+
+    .departamento-header {
+
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+    }
+
 
     .acciones {
-        flex-direction: column;
+
+        flex-direction:
+            column;
+
     }
 
-    .acciones button {
-        width: 100%;
+
+    .btn-exportar {
+
+        width:
+            100%;
+
     }
+
 }
