@@ -2084,3 +2084,687 @@ cerrarSesionBtn
 // ======================================================
 
 comprobarAdmin();
+
+// ======================================================
+// GESTIÓN DE EMPLEADOS
+// ======================================================
+
+const empleadosBody =
+    document.getElementById("empleadosBody");
+
+const nuevoEmpleadoBtn =
+    document.getElementById("nuevoEmpleadoBtn");
+
+const buscarEmpleado =
+    document.getElementById("buscarEmpleado");
+
+const buscarEmpleadoBtn =
+    document.getElementById("buscarEmpleadoBtn");
+
+const empleadoModal =
+    document.getElementById("empleadoModal");
+
+const modalTitulo =
+    document.getElementById("modalTitulo");
+
+const empleadoId =
+    document.getElementById("empleadoId");
+
+const empleadoDni =
+    document.getElementById("empleadoDni");
+
+const empleadoApellido =
+    document.getElementById("empleadoApellido");
+
+const empleadoNombre =
+    document.getElementById("empleadoNombre");
+
+const empleadoGrado =
+    document.getElementById("empleadoGrado");
+
+const empleadoDepartamento =
+    document.getElementById("empleadoDepartamento");
+
+const empleadoPassword =
+    document.getElementById("empleadoPassword");
+
+const empleadoActivo =
+    document.getElementById("empleadoActivo");
+
+const guardarEmpleadoBtn =
+    document.getElementById("guardarEmpleadoBtn");
+
+const cancelarEmpleadoBtn =
+    document.getElementById("cancelarEmpleadoBtn");
+
+
+let empleadosActuales = [];
+
+
+// ======================================================
+// LISTAR
+// ======================================================
+
+async function cargarEmpleados() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "admin_listar_empleados",
+            {
+
+                p_token:
+                    obtenerAdminToken(),
+
+                p_device_id:
+                    obtenerDeviceId(),
+
+                p_busqueda:
+                    buscarEmpleado.value
+                        .trim()
+                        || null
+
+            }
+        );
+
+
+    if (
+        error
+        ||
+        !data?.ok
+    ) {
+
+        console.error(error);
+
+        alert(
+            data?.error
+            ||
+            "No se pudo cargar el personal."
+        );
+
+        return;
+
+    }
+
+
+    empleadosActuales =
+        data.datos || [];
+
+
+    mostrarEmpleados();
+
+}
+
+
+// ======================================================
+// TABLA EMPLEADOS
+// ======================================================
+
+function mostrarEmpleados() {
+
+    empleadosBody.innerHTML =
+        "";
+
+
+    empleadosActuales.forEach(
+        empleado => {
+
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+            tr.innerHTML =
+                `
+
+                <td>
+                    ${empleado.grado || "-"}
+                </td>
+
+                <td>
+                    <strong>
+                        ${empleado.apellido},
+                        ${empleado.nombre}
+                    </strong>
+                </td>
+
+                <td>
+                    ${empleado.dni}
+                </td>
+
+                <td>
+                    ${empleado.departamento || "-"}
+                </td>
+
+                <td>
+
+                    ${
+                        empleado.activo
+
+                        ? '<span class="estado estado-completo">ACTIVO</span>'
+
+                        : '<span class="estado estado-faltante">INACTIVO</span>'
+                    }
+
+                </td>
+
+                <td>
+
+                    ${
+                        empleado.dispositivo_registrado
+
+                        ? '<span class="estado estado-completo">REGISTRADO</span>'
+
+                        : '<span class="estado estado-pendiente">SIN CELULAR</span>'
+                    }
+
+                </td>
+
+                <td class="acciones-empleado">
+
+                    <button
+                        class="btn-mini"
+                        onclick="editarEmpleado(${empleado.id})"
+                    >
+                        Editar
+                    </button>
+
+                    <button
+                        class="btn-mini btn-reset"
+                        onclick="resetearCelular(${empleado.id})"
+                    >
+                        Reset celular
+                    </button>
+
+                    <button
+                        class="btn-mini btn-eliminar"
+                        onclick="eliminarEmpleado(${empleado.id})"
+                    >
+                        Eliminar
+                    </button>
+
+                </td>
+
+                `;
+
+
+            empleadosBody.appendChild(
+                tr
+            );
+
+        }
+    );
+
+}
+
+
+// ======================================================
+// BUSCAR
+// ======================================================
+
+buscarEmpleadoBtn.addEventListener(
+    "click",
+    cargarEmpleados
+);
+
+
+buscarEmpleado.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            cargarEmpleados();
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// NUEVO
+// ======================================================
+
+nuevoEmpleadoBtn.addEventListener(
+    "click",
+    () => {
+
+        empleadoId.value =
+            "";
+
+        empleadoDni.value =
+            "";
+
+        empleadoApellido.value =
+            "";
+
+        empleadoNombre.value =
+            "";
+
+        empleadoGrado.value =
+            "SV";
+
+        empleadoPassword.value =
+            "";
+
+        empleadoActivo.checked =
+            true;
+
+
+        cargarDepartamentosModal();
+
+
+        modalTitulo.textContent =
+            "Agregar empleado";
+
+
+        empleadoModal.hidden =
+            false;
+
+    }
+);
+
+
+// ======================================================
+// EDITAR
+// ======================================================
+
+window.editarEmpleado =
+    function (
+        id
+    ) {
+
+        const empleado =
+            empleadosActuales.find(
+                item =>
+                    item.id === id
+            );
+
+
+        if (!empleado) {
+            return;
+        }
+
+
+        empleadoId.value =
+            empleado.id;
+
+        empleadoDni.value =
+            empleado.dni;
+
+        empleadoApellido.value =
+            empleado.apellido;
+
+        empleadoNombre.value =
+            empleado.nombre;
+
+        empleadoGrado.value =
+            empleado.grado;
+
+        empleadoPassword.value =
+            "";
+
+        empleadoActivo.checked =
+            empleado.activo;
+
+
+        cargarDepartamentosModal(
+            empleado.departamento_id
+        );
+
+
+        modalTitulo.textContent =
+            "Editar empleado";
+
+
+        empleadoModal.hidden =
+            false;
+
+    };
+
+
+// ======================================================
+// DEPARTAMENTOS MODAL
+// ======================================================
+
+function cargarDepartamentosModal(
+    seleccionado = null
+) {
+
+    empleadoDepartamento.innerHTML =
+        "";
+
+
+    adminActual.departamentos
+        .forEach(
+            departamento => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    departamento.id;
+
+
+                option.textContent =
+                    departamento.nombre;
+
+
+                empleadoDepartamento
+                    .appendChild(
+                        option
+                    );
+
+            }
+        );
+
+
+    if (
+        seleccionado
+    ) {
+
+        empleadoDepartamento.value =
+            String(
+                seleccionado
+            );
+
+    }
+
+}
+
+
+// ======================================================
+// GUARDAR
+// ======================================================
+
+guardarEmpleadoBtn.addEventListener(
+    "click",
+    async () => {
+
+        guardarEmpleadoBtn.disabled =
+            true;
+
+
+        const id =
+            empleadoId.value
+                ? Number(
+                    empleadoId.value
+                )
+                : null;
+
+
+        const {
+            data,
+            error
+        } =
+            await sb.rpc(
+                "admin_guardar_empleado",
+                {
+
+                    p_token:
+                        obtenerAdminToken(),
+
+                    p_device_id:
+                        obtenerDeviceId(),
+
+                    p_id:
+                        id,
+
+                    p_dni:
+                        empleadoDni.value,
+
+                    p_apellido:
+                        empleadoApellido.value,
+
+                    p_nombre:
+                        empleadoNombre.value,
+
+                    p_grado:
+                        empleadoGrado.value,
+
+                    p_departamento_id:
+                        Number(
+                            empleadoDepartamento.value
+                        ),
+
+                    p_password:
+                        empleadoPassword.value
+                        || null,
+
+                    p_activo:
+                        empleadoActivo.checked
+
+                }
+            );
+
+
+        guardarEmpleadoBtn.disabled =
+            false;
+
+
+        if (
+            error
+            ||
+            !data?.ok
+        ) {
+
+            alert(
+                data?.error
+                ||
+                "No se pudo guardar."
+            );
+
+            return;
+
+        }
+
+
+        empleadoModal.hidden =
+            true;
+
+
+        if (
+            data.nuevo
+        ) {
+
+            alert(
+                `Empleado creado.\nContraseña inicial: ${data.password_inicial}`
+            );
+
+        }
+
+
+        await cargarEmpleados();
+
+        await cargarReporte();
+
+    }
+);
+
+
+// ======================================================
+// CANCELAR
+// ======================================================
+
+cancelarEmpleadoBtn.addEventListener(
+    "click",
+    () => {
+
+        empleadoModal.hidden =
+            true;
+
+    }
+);
+
+
+// ======================================================
+// RESET CELULAR
+// ======================================================
+
+window.resetearCelular =
+    async function (
+        id
+    ) {
+
+        const empleado =
+            empleadosActuales.find(
+                item =>
+                    item.id === id
+            );
+
+
+        if (!empleado) {
+            return;
+        }
+
+
+        const confirmar =
+            confirm(
+                `¿Resetear el celular de ${empleado.apellido}, ${empleado.nombre}?\n\nDespués deberá volver a iniciar sesión y configurar la seguridad del nuevo teléfono.`
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await sb.rpc(
+                "admin_resetear_dispositivo",
+                {
+
+                    p_token:
+                        obtenerAdminToken(),
+
+                    p_device_id:
+                        obtenerDeviceId(),
+
+                    p_empleado_id:
+                        id
+
+                }
+            );
+
+
+        if (
+            error
+            ||
+            !data?.ok
+        ) {
+
+            alert(
+                data?.error
+                ||
+                "No se pudo resetear."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            "Dispositivo reseteado correctamente."
+        );
+
+
+        cargarEmpleados();
+
+    };
+
+
+// ======================================================
+// ELIMINAR / DESACTIVAR
+// ======================================================
+
+window.eliminarEmpleado =
+    async function (
+        id
+    ) {
+
+        const empleado =
+            empleadosActuales.find(
+                item =>
+                    item.id === id
+            );
+
+
+        if (!empleado) {
+            return;
+        }
+
+
+        const confirmar =
+            confirm(
+                `¿Eliminar a ${empleado.apellido}, ${empleado.nombre}?\n\nEl usuario quedará inactivo pero se conservará su historial de asistencias.`
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await sb.rpc(
+                "admin_eliminar_empleado",
+                {
+
+                    p_token:
+                        obtenerAdminToken(),
+
+                    p_device_id:
+                        obtenerDeviceId(),
+
+                    p_empleado_id:
+                        id
+
+                }
+            );
+
+
+        if (
+            error
+            ||
+            !data?.ok
+        ) {
+
+            alert(
+                data?.error
+                ||
+                "No se pudo eliminar."
+            );
+
+            return;
+
+        }
+
+
+        await cargarEmpleados();
+
+        await cargarReporte();
+
+    };
+
+
+// Cargar personal después del panel
+setTimeout(
+    cargarEmpleados,
+    500
+);
