@@ -43,6 +43,11 @@ const contenidoAsistencias =
 const cerrarSesionBtn =
     document.getElementById("cerrarSesionBtn");
 
+const estadoSelect =
+    document.getElementById(
+        "estado"
+    );
+
 
 let filasActuales = [];
 
@@ -531,9 +536,25 @@ async function cargarReporte() {
         }
 
 
-        filasActuales =
+        const datosRecibidos =
             data.datos
             || [];
+        
+        
+        const estadoSeleccionado =
+            estadoSelect.value;
+        
+        
+        filasActuales =
+            estadoSeleccionado
+        
+                ? datosRecibidos.filter(
+                    fila =>
+                        fila.estado ===
+                        estadoSeleccionado
+                )
+        
+                : datosRecibidos;
 
 
         actualizarResumen();
