@@ -1,160 +1,238 @@
-// Se reemplaza por la clave VAPID pública al desplegar el servicio en Supabase.
-// Nunca publicar la clave VAPID privada.
+// Recordatorios Web Push: ajustes desde la campanita del panel de asistencia.
+// La clave privada VAPID y los secretos permanecen en Supabase.
+
 let pushClavePublica = null;
 
-async function obtenerClavePublicaPush() {
-    if (pushClavePublica) return pushClavePublica;
-    const respuesta = await fetch(
-        `${SUPABASE_URL}/functions/v1/push-public-key`,
-        {headers: {"apikey": SUPABASE_PUBLIC_KEY}, cache: "no-store"}
-    );
-    const data = await respuesta.json();
-    if (!respuesta.ok || !data?.ok || !data.publicKey) {
-        throw new Error("No se pudo cargar la configuración de notificaciones.");
-    }
-    pushClavePublica = data.publicKey;
-    return pushClavePublica;
-}
-
-const botonRecordatorios = document.getElementById("notificacionesBtn");
-const instructivoPush = document.getElementById("instructivoPush");
-const pasosPush = document.getElementById("pasosPush");
-
-function actualizarInstructivoPush() {
-    if (!instructivoPush || !pasosPush) return;
-    const ios = pushEsIOS();
-    pasosPush.textContent = ios
-        ? "iPhone: 1) Abrí este sitio en Safari. 2) Tocá Compartir → Agregar a pantalla de inicio. 3) Abrí el ícono instalado. 4) Tocá Activar recordatorios y aceptá el permiso."
-        : "Android: 1) Tocá Activar recordatorios. 2) Aceptá el permiso de notificaciones. 3) Mantené habilitadas las notificaciones de Chrome o del navegador."; 
-}
-
+const botonCampana = document.getElementById("notificacionesBtn");
+const puntoCampana = document.getElementById("puntoRecordatorios");
+const dialogoRecordatorios = document.getElementById("dialogoRecordatorios");
+const cerrarRecordatorios = document.getElementById("cerrarRecordatoriosBtn");
+const activarRecordatorios = document.getElementById("confirmarNotificacionesBtn");
+const estadoRecordatorios = document.getElementById("estadoRecordatorios");
+const guiaAndroid = document.getElementById("guiaAndroid");
+const guiaIOS = document.getElementById("guiaIOS");
 
 function pushEsIOS() {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-function pushEsStandalone() {
-    return matchMedia("(display-mode: standalone)").matches ||
+function pushEstaInstalada() {
+    return window.matchMedia("(display-mode: standalone)").matches ||
         navigator.standalone === true;
 }
 
-function pushCompatible() {
+function pushEsCompatible() {
     return "serviceWorker" in navigator &&
         "PushManager" in window &&
         "Notification" in window;
 }
 
-function pushClaveConfigurada() {
-    return Boolean(pushClavePublica);
+function mostrarEstadoRecordatorios(tipo, texto) {
+    const activados = tipo === "activado";
+    const bloqueados = ["no-disponible", "bloqueado", "instalar-ios", "comprobando"].includes(tipo);
+
+    if (estadoRecordatorios) estadoRecordatorios.textContent = texto;
+    if (botonCampana) botonCampana.classList.toggle("activada", activados);
+    if (puntoCampana) puntoCampana.hidden = activados;
+    if (activarRecordatorios) {
+        activarRecordatorios.hidden = activados;
+        activarRecordatorios.disabled = bloqueados;
+        activarRecordatorios.textContent = tipo === "en-proceso"
+            ? "Activando..."
+            : "Activar notificaciones";
+    }
+}
+
+async function obtenerClavePublicaPush() {
+    if (pushClavePublica) return pushClavePublica;
+
+    const respuesta = await fetch(
+        SUPABASE_URL + "/functions/v1/push-public-key",
+        { headers: { apikey: SUPABASE_PUBLIC_KEY }, cache: "no-store" }
+    );
+
+    const data = await respuesta.json();
+    if (!respuesta.ok || !data?.ok || !data.publicKey) {
+        throw new Error("No se pudo cargar la configuración de notificaciones.");
+    }
+
+    pushClavePublica = data.publicKey;
+    return pushClavePublica;
 }
 
 function pushClaveUint8(clave) {
     const padding = "=".repeat((4 - clave.length % 4) % 4);
-    const b64 = (clave + padding).replace(/-/g, "+").replace(/_/g, "/");
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const base64 = (clave + padding).replace(/-/g, "+").replace(/_/g, "/");
+    return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 }
 
-async function pushGuardarSuscripcion(suscripcion) {
-    const sus = suscripcion.toJSON();
-    if (!sus.endpoint || !sus.keys?.p256dh || !sus.keys?.auth) {
-        throw new Error("El dispositivo devolvió una suscripción incompleta.");
+async function guardarSuscripcionPush(suscripcion) {
+    const datos = suscripcion.toJSON();
+
+    if (!datos.endpoint || !datos.keys?.p256dh || !datos.keys?.auth) {
+        throw new Error("El celular devolvió una suscripción incompleta.");
     }
 
     const { data, error } = await sb.rpc("guardar_push_suscripcion", {
         p_token: obtenerTokenSesion(),
         p_device_id: obtenerDeviceId(),
-        p_endpoint: sus.endpoint,
-        p_p256dh: sus.keys.p256dh,
-        p_auth: sus.keys.auth
+        p_endpoint: datos.endpoint,
+        p_p256dh: datos.keys.p256dh,
+        p_auth: datos.keys.auth
     });
 
     if (error || !data?.ok) {
-        throw new Error(data?.error || "No se pudo guardar la suscripción Push.");
+        throw new Error(data?.error || "No se pudo registrar el dispositivo para recibir avisos.");
     }
 }
 
-async function prepararRecordatorioPush(estado) {
-    if (!botonRecordatorios) return;
-    botonRecordatorios.hidden = true;
-    if (instructivoPush) instructivoPush.hidden = true;
-    if (!estado?.entrada || estado?.salida) return;
-    actualizarInstructivoPush();
-    if (instructivoPush) instructivoPush.hidden = false;
+async function comprobarRecordatorios() {
+    if (!botonCampana) return;
 
-    if (pushEsIOS() && !pushEsStandalone()) {
-        botonRecordatorios.textContent = "Activar recordatorios en iPhone";
-        botonRecordatorios.hidden = false;
+    const ios = pushEsIOS();
+    if (guiaIOS) guiaIOS.hidden = !ios;
+    if (guiaAndroid) guiaAndroid.hidden = ios;
+
+    if (ios && !pushEstaInstalada()) {
+        mostrarEstadoRecordatorios(
+            "instalar-ios",
+            "Para recibir avisos en iPhone, primero agregá esta web a la pantalla de inicio y abrila desde su ícono."
+        );
         return;
     }
 
-    if (!pushCompatible()) return;
-
-    botonRecordatorios.textContent = "Activar recordatorios";
-    try {
-        await obtenerClavePublicaPush();
-    } catch (error) {
-        console.error("Recordatorios Push sin configurar:", error);
+    if (!pushEsCompatible()) {
+        mostrarEstadoRecordatorios(
+            "no-disponible",
+            "Este navegador no admite notificaciones Web Push. Probá con Chrome en Android o con la web instalada desde Safari en iPhone."
+        );
         return;
     }
+
+    if (Notification.permission === "denied") {
+        mostrarEstadoRecordatorios(
+            "bloqueado",
+            "Las notificaciones están bloqueadas. Habilitalas en la configuración del navegador o del teléfono."
+        );
+        return;
+    }
+
+    mostrarEstadoRecordatorios("comprobando", "Comprobando el estado de las notificaciones...");
 
     try {
         const registro = await navigator.serviceWorker.register("./sw.js");
         const existente = await registro.pushManager.getSubscription();
 
         if (Notification.permission === "granted" && existente) {
-            await pushGuardarSuscripcion(existente);
-            botonRecordatorios.hidden = true;
-            if (instructivoPush) instructivoPush.hidden = true;
-        } else {
-            botonRecordatorios.hidden = false;
+            // Renueva la asociación con la sesión actual, sin pedir permiso otra vez.
+            await guardarSuscripcionPush(existente);
+            mostrarEstadoRecordatorios(
+                "activado",
+                "Notificaciones activadas en este celular. Te avisaremos únicamente si registraste ingreso y todavía falta egreso."
+            );
+            return;
         }
+
+        mostrarEstadoRecordatorios(
+            "pendiente",
+            "Todavía no activaste los recordatorios en este dispositivo."
+        );
     } catch (error) {
-        console.error("Error verificando recordatorios Push:", error);
-        botonRecordatorios.hidden = false;
+        console.error("Error comprobando Web Push:", error);
+        mostrarEstadoRecordatorios(
+            "pendiente",
+            "No se pudo verificar el estado de las notificaciones. Podés volver a intentar activarlas."
+        );
     }
 }
 
-botonRecordatorios?.addEventListener("click", async () => {
-    if (pushEsIOS() && !pushEsStandalone()) {
-        alert("En iPhone: abrí Safari, tocá Compartir → Agregar a pantalla de inicio y abrí la aplicación desde el ícono. Después activá los recordatorios.");
+// Se invoca al cargar la asistencia. No abre la ventana ni pide permisos.
+function prepararRecordatorioPush(estado) {
+    if (!estado?.ok) return;
+    void comprobarRecordatorios();
+}
+
+botonCampana?.addEventListener("click", () => {
+    if (!dialogoRecordatorios) return;
+
+    if (!dialogoRecordatorios.open) {
+        dialogoRecordatorios.showModal();
+    }
+
+    void comprobarRecordatorios();
+});
+
+cerrarRecordatorios?.addEventListener("click", () => {
+    dialogoRecordatorios?.close();
+});
+
+activarRecordatorios?.addEventListener("click", async () => {
+    if (pushEsIOS() && !pushEstaInstalada()) {
+        mostrarEstadoRecordatorios(
+            "instalar-ios",
+            "Primero agregá esta página a la pantalla de inicio desde Safari y abrila como aplicación."
+        );
         return;
     }
 
-    if (!pushCompatible()) {
-        alert("Este navegador no permite notificaciones Push.");
+    if (!pushEsCompatible()) {
+        mostrarEstadoRecordatorios("no-disponible", "Tu navegador no admite Web Push.");
         return;
     }
 
+    if (Notification.permission === "denied") {
+        mostrarEstadoRecordatorios(
+            "bloqueado",
+            "Habilitá el permiso de notificaciones en los ajustes del teléfono."
+        );
+        return;
+    }
 
+    activarRecordatorios.disabled = true;
 
-    botonRecordatorios.disabled = true;
     try {
-        if (Notification.permission === "denied") {
-            throw new Error("Habilitá las notificaciones desde los permisos del navegador.");
+        // El pedido de permiso nace directamente del toque del usuario.
+        const permiso = Notification.permission === "granted"
+            ? "granted"
+            : await Notification.requestPermission();
+
+        if (permiso !== "granted") {
+            mostrarEstadoRecordatorios(
+                "pendiente",
+                "No se concedió permiso. Podés intentarlo nuevamente cuando quieras."
+            );
+            return;
         }
 
-        const permiso = await Notification.requestPermission();
-        if (permiso !== "granted") return;
+        mostrarEstadoRecordatorios("en-proceso", "Registrando este celular para recibir recordatorios...");
 
-        const registro = await navigator.serviceWorker.register("./sw.js");
-        const listo = await navigator.serviceWorker.ready;
-        let suscripcion = await listo.pushManager.getSubscription();
+        const clavePublica = await obtenerClavePublicaPush();
+        await navigator.serviceWorker.register("./sw.js");
+        const registro = await navigator.serviceWorker.ready;
 
+        let suscripcion = await registro.pushManager.getSubscription();
         if (!suscripcion) {
-            suscripcion = await listo.pushManager.subscribe({
+            suscripcion = await registro.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: pushClaveUint8(await obtenerClavePublicaPush())
+                applicationServerKey: pushClaveUint8(clavePublica)
             });
         }
 
-        await pushGuardarSuscripcion(suscripcion);
-        botonRecordatorios.hidden = true;
-        if (instructivoPush) instructivoPush.hidden = true;
-        alert("Recordatorios activados correctamente.");
+        await guardarSuscripcionPush(suscripcion);
+        mostrarEstadoRecordatorios(
+            "activado",
+            "¡Listo! Los recordatorios están activados. Solo recibirás el aviso cuando exista un ingreso sin egreso."
+        );
     } catch (error) {
-        console.error("Error activando Push:", error);
-        alert(error.message || "No se pudieron activar los recordatorios.");
+        console.error("No se pudo activar Web Push:", error);
+        mostrarEstadoRecordatorios(
+            "pendiente",
+            error.message || "No se pudieron activar las notificaciones."
+        );
     } finally {
-        botonRecordatorios.disabled = false;
+        if (activarRecordatorios && !activarRecordatorios.hidden &&
+            Notification.permission !== "denied") {
+            activarRecordatorios.disabled = false;
+        }
     }
 });
