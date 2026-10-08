@@ -29,7 +29,7 @@ function pushEsCompatible() {
 
 function mostrarEstadoRecordatorios(tipo, texto) {
     const activados = tipo === "activado";
-    const bloqueados = ["no-disponible", "bloqueado", "instalar-ios", "comprobando"].includes(tipo);
+    const bloqueados = ["no-disponible", "bloqueado", "instalar-ios", "comprobando", "en-proceso"].includes(tipo);
 
     if (estadoRecordatorios) estadoRecordatorios.textContent = texto;
     if (botonCampana) botonCampana.classList.toggle("activada", activados);
