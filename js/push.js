@@ -1,6 +1,20 @@
 // Se reemplaza por la clave VAPID pública al desplegar el servicio en Supabase.
 // Nunca publicar la clave VAPID privada.
-const PUSH_VAPID_PUBLIC_KEY = "PENDIENTE_CONFIGURAR_VAPID_PUBLICA";
+let pushClavePublica = null;
+
+async function obtenerClavePublicaPush() {
+    if (pushClavePublica) return pushClavePublica;
+    const respuesta = await fetch(
+        `${SUPABASE_URL}/functions/v1/push-public-key`,
+        {headers: {"apikey": SUPABASE_PUBLIC_KEY}, cache: "no-store"}
+    );
+    const data = await respuesta.json();
+    if (!respuesta.ok || !data?.ok || !data.publicKey) {
+        throw new Error("No se pudo cargar la configuración de notificaciones.");
+    }
+    pushClavePublica = data.publicKey;
+    return pushClavePublica;
+}
 
 const botonRecordatorios = document.getElementById("notificacionesBtn");
 const instructivoPush = document.getElementById("instructivoPush");
@@ -31,7 +45,7 @@ function pushCompatible() {
 }
 
 function pushClaveConfigurada() {
-    return PUSH_VAPID_PUBLIC_KEY !== "PENDIENTE_CONFIGURAR_VAPID_PUBLICA";
+    return Boolean(pushClavePublica);
 }
 
 function pushClaveUint8(clave) {
@@ -76,8 +90,10 @@ async function prepararRecordatorioPush(estado) {
     if (!pushCompatible()) return;
 
     botonRecordatorios.textContent = "Activar recordatorios";
-    if (!pushClaveConfigurada()) {
-        console.warn("Recordatorios Push pendientes de configuración en Supabase.");
+    try {
+        await obtenerClavePublicaPush();
+    } catch (error) {
+        console.error("Recordatorios Push sin configurar:", error);
         return;
     }
 
@@ -109,10 +125,7 @@ botonRecordatorios?.addEventListener("click", async () => {
         return;
     }
 
-    if (!pushClaveConfigurada()) {
-        alert("Los recordatorios todavía no están habilitados en el servidor.");
-        return;
-    }
+
 
     botonRecordatorios.disabled = true;
     try {
@@ -130,7 +143,7 @@ botonRecordatorios?.addEventListener("click", async () => {
         if (!suscripcion) {
             suscripcion = await listo.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: pushClaveUint8(PUSH_VAPID_PUBLIC_KEY)
+                applicationServerKey: pushClaveUint8(await obtenerClavePublicaPush())
             });
         }
 
