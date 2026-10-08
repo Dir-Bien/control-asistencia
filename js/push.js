@@ -3,6 +3,17 @@
 const PUSH_VAPID_PUBLIC_KEY = "PENDIENTE_CONFIGURAR_VAPID_PUBLICA";
 
 const botonRecordatorios = document.getElementById("notificacionesBtn");
+const instructivoPush = document.getElementById("instructivoPush");
+const pasosPush = document.getElementById("pasosPush");
+
+function actualizarInstructivoPush() {
+    if (!instructivoPush || !pasosPush) return;
+    const ios = pushEsIOS();
+    pasosPush.textContent = ios
+        ? "iPhone: 1) Abrí este sitio en Safari. 2) Tocá Compartir → Agregar a pantalla de inicio. 3) Abrí el ícono instalado. 4) Tocá Activar recordatorios y aceptá el permiso."
+        : "Android: 1) Tocá Activar recordatorios. 2) Aceptá el permiso de notificaciones. 3) Mantené habilitadas las notificaciones de Chrome o del navegador."; 
+}
+
 
 function pushEsIOS() {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -51,7 +62,10 @@ async function pushGuardarSuscripcion(suscripcion) {
 async function prepararRecordatorioPush(estado) {
     if (!botonRecordatorios) return;
     botonRecordatorios.hidden = true;
+    if (instructivoPush) instructivoPush.hidden = true;
     if (!estado?.entrada || estado?.salida) return;
+    actualizarInstructivoPush();
+    if (instructivoPush) instructivoPush.hidden = false;
 
     if (pushEsIOS() && !pushEsStandalone()) {
         botonRecordatorios.textContent = "Activar recordatorios en iPhone";
@@ -74,6 +88,7 @@ async function prepararRecordatorioPush(estado) {
         if (Notification.permission === "granted" && existente) {
             await pushGuardarSuscripcion(existente);
             botonRecordatorios.hidden = true;
+            if (instructivoPush) instructivoPush.hidden = true;
         } else {
             botonRecordatorios.hidden = false;
         }
@@ -121,6 +136,7 @@ botonRecordatorios?.addEventListener("click", async () => {
 
         await pushGuardarSuscripcion(suscripcion);
         botonRecordatorios.hidden = true;
+        if (instructivoPush) instructivoPush.hidden = true;
         alert("Recordatorios activados correctamente.");
     } catch (error) {
         console.error("Error activando Push:", error);
