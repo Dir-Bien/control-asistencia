@@ -676,107 +676,49 @@ async function registrarIngreso() {
 
 
 // ==========================================================
-// EGRESO
+// EGRESO: el grado AC requiere geolocalización dentro de 50 m.
+// La validación final siempre está del lado de Supabase.
 // ==========================================================
 
-egresoBtn.addEventListener(
-    "click",
+egresoBtn.addEventListener("click", async () => {
+    egresoBtn.disabled = true;
+    try {
+        mensaje("Verificando identidad...");
+        await verificarWebAuthn();
 
-    async () => {
-
-        egresoBtn.disabled =
-            true;
-
-
-        try {
-
-            mensaje(
-                "Verificando identidad..."
-            );
-
-
-            await verificarWebAuthn();
-
-
-            mensaje(
-                "Registrando egreso..."
-            );
-
-
-            const {
-                data,
-                error
-            } =
-                await sb.rpc(
-                    "registrar_salida_segura",
-                    {
-
-                        p_token:
-                            obtenerTokenSesion(),
-
-                        p_device_id:
-                            obtenerDeviceId()
-
-                    }
-                );
-
-
-            if (error) {
-
-                console.error(error);
-
-                throw new Error(
-                    "No se pudo registrar el egreso."
-                );
-
-            }
-
-
-            if (!data?.ok) {
-
-                throw new Error(
-                    data?.error
-                    ||
-                    "No se pudo registrar el egreso."
-                );
-
-            }
-
-
-            mensaje(
-                "Egreso registrado correctamente."
-            );
-
-
-            const estado =
-                await obtenerEstado();
-
-
-            mostrarEstado(
-                estado
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            mensaje(
-                error.name === "NotAllowedError"
-                    ? "La verificación fue cancelada."
-                    : error.message,
-                true
-            );
-
-
-            egresoBtn.disabled =
-                false;
-
+        let latitud = null, longitud = null, precision = null;
+        if (String(estadoActual?.grado || "").trim().toUpperCase() === "AC") {
+            mensaje("Verificando ubicación...");
+            const ubicacion = await obtenerUbicacion();
+            latitud = ubicacion.latitud;
+            longitud = ubicacion.longitud;
+            precision = ubicacion.precision;
         }
 
+        mensaje("Registrando egreso...");
+        const { data, error } = await sb.rpc("registrar_salida_segura", {
+            p_token: obtenerTokenSesion(),
+            p_device_id: obtenerDeviceId(),
+            p_latitud: latitud,
+            p_longitud: longitud,
+            p_precision: precision
+        });
+
+        if (error || !data?.ok) {
+            if (error) console.error(error);
+            throw new Error(data?.error || "No se pudo registrar el egreso.");
+        }
+
+        const estado = await obtenerEstado();
+        mostrarEstado(estado);
+    } catch (error) {
+        console.error(error);
+        mensaje(error.name === "NotAllowedError"
+            ? "La verificación fue cancelada."
+            : error.message, true);
+        egresoBtn.disabled = false;
     }
-);
+});
 
 // ==========================================================
 // INICIO
