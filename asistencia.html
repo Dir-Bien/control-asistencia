@@ -32,8 +32,23 @@
 
 <main class="card">
 
-    <div class="logo">
-        CONTROL DE ASISTENCIA
+    <div class="cabecera-asistencia">
+        <div class="logo">CONTROL DE ASISTENCIA</div>
+        <button
+            id="notificacionesBtn"
+            class="boton-campana"
+            type="button"
+            aria-label="Configurar notificaciones de egreso"
+            aria-haspopup="dialog"
+            aria-controls="dialogoRecordatorios"
+            title="Recordatorios de egreso"
+        >
+            <svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                <path d="M10 21h4"/>
+            </svg>
+            <span id="puntoRecordatorios" class="punto-campana" aria-hidden="true"></span>
+        </button>
     </div>
 
 
@@ -140,21 +155,6 @@
         Registrar egreso
     </button>
 
-    <section id="instructivoPush" class="seguridad-box" hidden aria-label="Instrucciones para activar recordatorios">
-      <strong>Recordatorios de egreso</strong>
-      <p>Recibí un aviso a las 13:00 (mañana) o 18:00 (tarde), únicamente si registraste el ingreso y todavía no el egreso.</p>
-      <p id="pasosPush"></p>
-      <p>Los recordatorios necesitan permiso de notificaciones. Podés desactivarlos desde los ajustes de tu teléfono.</p>
-    </section>
-
-    <button
-        id="notificacionesBtn"
-        class="btn-secundario"
-        hidden
-    >
-        Activar recordatorios
-    </button>
-    
     <p
         id="mensaje"
         class="mensaje"
@@ -166,6 +166,46 @@
     </p>
 
 </main>
+
+<dialog id="dialogoRecordatorios" class="dialogo-recordatorios" aria-labelledby="tituloRecordatorios">
+    <div class="dialogo-contenido">
+        <div class="dialogo-cabecera">
+            <div class="dialogo-icono" aria-hidden="true">🔔</div>
+            <button id="cerrarRecordatoriosBtn" class="cerrar-dialogo" type="button" aria-label="Cerrar">×</button>
+        </div>
+
+        <h2 id="tituloRecordatorios">Recordatorios de egreso</h2>
+        <p class="dialogo-descripcion">
+            Te avisaremos a las <strong>13:00</strong> si tu turno es mañana,
+            o a las <strong>18:00</strong> si es tarde.
+            <strong>Solo recibirás el aviso si registraste el ingreso y todavía no el egreso.</strong>
+        </p>
+
+        <div id="guiaAndroid" class="guia-recordatorios" hidden>
+            <strong>Cómo activarlos en Android</strong>
+            <ol>
+                <li>Tocá «Activar notificaciones».</li>
+                <li>Permití las notificaciones de este sitio.</li>
+                <li>Mantené los permisos habilitados en tu navegador.</li>
+            </ol>
+        </div>
+
+        <div id="guiaIOS" class="guia-recordatorios" hidden>
+            <strong>Cómo activarlos en iPhone</strong>
+            <ol>
+                <li>Abrí esta web con <strong>Safari</strong>.</li>
+                <li>Tocá <strong>Compartir → Agregar a pantalla de inicio</strong>.</li>
+                <li>Abrí el ícono instalado y tocá «Activar notificaciones».</li>
+                <li>Aceptá el permiso de notificaciones.</li>
+            </ol>
+        </div>
+
+        <p class="nota-recordatorios">Podés recibir avisos con la página cerrada, según la configuración de tu teléfono. Los recordatorios se pueden desactivar desde los ajustes del dispositivo.</p>
+        <p id="estadoRecordatorios" class="estado-recordatorios" aria-live="polite">Comprobando notificaciones...</p>
+
+        <button id="confirmarNotificacionesBtn" type="button" disabled>Activar notificaciones</button>
+    </div>
+</dialog>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
