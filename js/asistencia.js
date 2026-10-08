@@ -41,14 +41,6 @@ const egresoBtn =
 const mensajeEl =
     document.getElementById("mensaje");
 
-const notificacionesBtn =
-    document.getElementById(
-        "notificacionesBtn"
-    );
-
-let intervaloRecordatorio = null;
-
-
 let estadoActual = null;
 
 
@@ -288,21 +280,8 @@ function mostrarEstado(
         );
 
 
-        // Frenamos cualquier recordatorio
-        if (
-            intervaloRecordatorio
-        ) {
-
-            clearInterval(
-                intervaloRecordatorio
-            );
-
-
-            intervaloRecordatorio =
-                null;
-
-        }
-
+        // Si ya registró el egreso, dejamos de ofrecer activar recordatorios.
+        prepararRecordatorioPush(data);
 
         return;
 
@@ -328,7 +307,7 @@ function mostrarEstado(
 
 
     // Recordatorio 13:00 / 18:00
-    programarRecordatorioEgreso();
+    prepararRecordatorioPush(data);
 
 }
 
@@ -697,441 +676,49 @@ async function registrarIngreso() {
 
 
 // ==========================================================
-// EGRESO
+// EGRESO: el grado AC requiere geolocalización dentro de 50 m.
+// La validación final siempre está del lado de Supabase.
 // ==========================================================
 
-egresoBtn.addEventListener(
-    "click",
-
-    async () => {
-
-        egresoBtn.disabled =
-            true;
-
-
-        try {
-
-            mensaje(
-                "Verificando identidad..."
-            );
-
-
-            await verificarWebAuthn();
-
-
-            mensaje(
-                "Registrando egreso..."
-            );
-
-
-            const {
-                data,
-                error
-            } =
-                await sb.rpc(
-                    "registrar_salida_segura",
-                    {
-
-                        p_token:
-                            obtenerTokenSesion(),
-
-                        p_device_id:
-                            obtenerDeviceId()
-
-                    }
-                );
-
-
-            if (error) {
-
-                console.error(error);
-
-                throw new Error(
-                    "No se pudo registrar el egreso."
-                );
-
-            }
-
-
-            if (!data?.ok) {
-
-                throw new Error(
-                    data?.error
-                    ||
-                    "No se pudo registrar el egreso."
-                );
-
-            }
-
-
-            mensaje(
-                "Egreso registrado correctamente."
-            );
-
-
-            const estado =
-                await obtenerEstado();
-
-
-            mostrarEstado(
-                estado
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-
-            mensaje(
-                error.name === "NotAllowedError"
-                    ? "La verificación fue cancelada."
-                    : error.message,
-                true
-            );
-
-
-            egresoBtn.disabled =
-                false;
-
-        }
-
-    }
-);
-
-// ==========================================================
-// NOTIFICACIONES
-// ==========================================================
-
-async function activarNotificaciones() {
-
-    if (
-        !("Notification" in window)
-    ) {
-
-        mensaje(
-            "Este navegador no admite notificaciones.",
-            true
-        );
-
-        return false;
-    }
-
-
-    if (
-        Notification.permission === "granted"
-    ) {
-
-        notificacionesBtn.hidden = true;
-
-        return true;
-    }
-
-
-    if (
-        Notification.permission === "denied"
-    ) {
-
-        mensaje(
-            "Las notificaciones están bloqueadas. Tenés que habilitarlas desde los permisos del navegador.",
-            true
-        );
-
-        return false;
-    }
-
-
-    const permiso =
-        await Notification.requestPermission();
-
-
-    if (
-        permiso === "granted"
-    ) {
-
-        notificacionesBtn.hidden =
-            true;
-
-
-        mensaje(
-            "Recordatorios activados."
-        );
-
-
-        return true;
-    }
-
-
-    return false;
-}
-
-
-// ==========================================================
-// MOSTRAR BOTÓN SI FALTA PERMISO
-// ==========================================================
-
-function comprobarPermisoNotificaciones() {
-
-    if (
-        !("Notification" in window)
-    ) {
-
-        return;
-    }
-
-
-    if (
-        Notification.permission !== "granted"
-        &&
-        estadoActual?.entrada
-        &&
-        !estadoActual?.salida
-    ) {
-
-        notificacionesBtn.hidden =
-            false;
-
-    } else {
-
-        notificacionesBtn.hidden =
-            true;
-
-    }
-
-}
-
-
-// ==========================================================
-// HORA ARGENTINA
-// ==========================================================
-
-function obtenerHoraArgentina() {
-
-    const partes =
-        new Intl.DateTimeFormat(
-            "en-US",
-            {
-                timeZone:
-                    "America/Argentina/Buenos_Aires",
-
-                hour:
-                    "2-digit",
-
-                minute:
-                    "2-digit",
-
-                hour12:
-                    false
-            }
-        )
-        .formatToParts(
-            new Date()
-        );
-
-
-    return {
-
-        hora:
-            Number(
-                partes.find(
-                    p =>
-                        p.type === "hour"
-                )?.value
-            ),
-
-        minuto:
-            Number(
-                partes.find(
-                    p =>
-                        p.type === "minute"
-                )?.value
-            )
-
-    };
-
-}
-
-
-// ==========================================================
-// PROGRAMAR RECORDATORIO
-// ==========================================================
-
-function programarRecordatorioEgreso() {
-
-    if (
-        intervaloRecordatorio
-    ) {
-
-        clearInterval(
-            intervaloRecordatorio
-        );
-
-    }
-
-
-    if (
-        !estadoActual?.entrada
-        ||
-        estadoActual?.salida
-        ||
-        !estadoActual?.turno
-    ) {
-
-        return;
-
-    }
-
-
-    comprobarPermisoNotificaciones();
-
-
-    intervaloRecordatorio =
-        setInterval(
-            revisarRecordatorioEgreso,
-            30000
-        );
-
-
-    revisarRecordatorioEgreso();
-
-}
-
-
-// ==========================================================
-// REVISAR SI HAY QUE NOTIFICAR
-// ==========================================================
-
-async function revisarRecordatorioEgreso() {
-
-    if (
-        !estadoActual?.entrada
-        ||
-        estadoActual?.salida
-    ) {
-
-        return;
-
-    }
-
-
-    const {
-        hora,
-        minuto
-    } =
-        obtenerHoraArgentina();
-
-
-    const horaObjetivo =
-        estadoActual.turno === "MANANA"
-            ? 13
-            : 18;
-
-
-    // Permitimos una ventana de 10 minutos.
-    // Esto ayuda si el navegador ralentiza timers.
-    if (
-        hora !== horaObjetivo
-        ||
-        minuto > 10
-    ) {
-
-        return;
-
-    }
-
-
-    const clave =
-        `recordatorio-egreso-${estadoActual.fecha}`;
-
-
-    // Ya notificamos hoy.
-    if (
-        localStorage.getItem(
-            clave
-        )
-    ) {
-
-        return;
-
-    }
-
-
+egresoBtn.addEventListener("click", async () => {
+    egresoBtn.disabled = true;
     try {
+        mensaje("Verificando identidad...");
+        await verificarWebAuthn();
 
-        // Volvemos a consultar Supabase antes
-        // de notificar por si ya registró egreso.
-
-        const estadoNuevo =
-            await obtenerEstado();
-
-
-        if (
-            !estadoNuevo?.entrada
-            ||
-            estadoNuevo?.salida
-        ) {
-
-            return;
-
+        let latitud = null, longitud = null, precision = null;
+        if (String(estadoActual?.grado || "").trim().toUpperCase() === "AC") {
+            mensaje("Verificando ubicación...");
+            const ubicacion = await obtenerUbicacion();
+            latitud = ubicacion.latitud;
+            longitud = ubicacion.longitud;
+            precision = ubicacion.precision;
         }
 
+        mensaje("Registrando egreso...");
+        const { data, error } = await sb.rpc("registrar_salida_segura", {
+            p_token: obtenerTokenSesion(),
+            p_device_id: obtenerDeviceId(),
+            p_latitud: latitud,
+            p_longitud: longitud,
+            p_precision: precision
+        });
 
-        if (
-            Notification.permission
-            === "granted"
-        ) {
-
-            new Notification(
-                "Control de asistencia",
-                {
-                    body:
-                        "No olvides registrar egreso."
-                }
-            );
-
-
-            localStorage.setItem(
-                clave,
-                "1"
-            );
-
-
-            mensaje(
-                "No olvides registrar egreso."
-            );
-
+        if (error || !data?.ok) {
+            if (error) console.error(error);
+            throw new Error(data?.error || "No se pudo registrar el egreso.");
         }
 
-    } catch (
-        error
-    ) {
-
-        console.error(
-            "Error comprobando recordatorio:",
-            error
-        );
-
+        const estado = await obtenerEstado();
+        mostrarEstado(estado);
+    } catch (error) {
+        console.error(error);
+        mensaje(error.name === "NotAllowedError"
+            ? "La verificación fue cancelada."
+            : error.message, true);
+        egresoBtn.disabled = false;
     }
-
-}
-
-
-// ==========================================================
-// BOTÓN ACTIVAR NOTIFICACIONES
-// ==========================================================
-
-notificacionesBtn
-    ?.addEventListener(
-        "click",
-        async () => {
-
-            await activarNotificaciones();
-
-            programarRecordatorioEgreso();
-
-        }
-    );
-
+});
 
 // ==========================================================
 // INICIO

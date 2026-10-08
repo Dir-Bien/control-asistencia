@@ -1,0 +1,11 @@
+{
+  "name": "Control de Asistencia",
+  "short_name": "Asistencia",
+  "id": "/control-asistencia/",
+  "start_url": "./asistencia.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f4f8",
+  "theme_color": "#182230",
+  "lang": "es-AR"
+}

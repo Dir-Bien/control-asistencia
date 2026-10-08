@@ -19,6 +19,8 @@
         href="data:,"
     >
 
+    <link rel="manifest" href="./manifest.json">
+
     <link
         rel="stylesheet"
         href="css/styles.css"
@@ -138,6 +140,13 @@
         Registrar egreso
     </button>
 
+    <section id="instructivoPush" class="seguridad-box" hidden aria-label="Instrucciones para activar recordatorios">
+      <strong>Recordatorios de egreso</strong>
+      <p>Recibí un aviso a las 13:00 (mañana) o 18:00 (tarde), únicamente si registraste el ingreso y todavía no el egreso.</p>
+      <p id="pasosPush"></p>
+      <p>Los recordatorios necesitan permiso de notificaciones. Podés desactivarlos desde los ajustes de tu teléfono.</p>
+    </section>
+
     <button
         id="notificacionesBtn"
         class="btn-secundario"
@@ -164,6 +173,8 @@
 <script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js"></script>
 
 <script src="js/config.js"></script>
+
+<script src="js/push.js"></script>
 
 <script src="js/asistencia.js"></script>
 
