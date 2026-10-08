@@ -161,6 +161,9 @@ function mostrarEstado(
 
     estadoActual = data;
 
+    // Consultar recordatorios al abrir el registro, incluso antes del ingreso.
+    prepararRecordatorioPush(data);
+
 
     nombreEl.textContent =
         `${data.apellido}, ${data.nombre}`;
@@ -279,10 +282,6 @@ function mostrarEstado(
             "La jornada de hoy ya está registrada."
         );
 
-
-        // Si ya registró el egreso, dejamos de ofrecer activar recordatorios.
-        prepararRecordatorioPush(data);
-
         return;
 
     }
@@ -304,10 +303,6 @@ function mostrarEstado(
     mensaje(
         `Ingreso registrado a las ${horaArgentina(data.entrada)}.`
     );
-
-
-    // Recordatorio 13:00 / 18:00
-    prepararRecordatorioPush(data);
 
 }
 
