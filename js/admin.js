@@ -52,6 +52,8 @@ const estadoSelect =
 let filasActuales = [];
 
 let adminActual = null;
+let inactividadActual = new Map();
+let alertasActuales = [];
 
 
 // ======================================================
@@ -536,6 +538,8 @@ async function cargarReporte() {
         }
 
 
+        await cargarInactividad(rango.hasta, departamento, grado);
+
         const datosRecibidos =
             data.datos
             || [];
@@ -611,6 +615,74 @@ buscarBtn.addEventListener(
     cargarReporte
 );
 
+
+
+function textoInactividad(fila) {
+    if (!fila) return "";
+    const dias = Number(fila.dias_calendario || 0);
+    const tiempo = dias === 1 ? "1 día" : dias + " días";
+    const ultimo = fila.ultima_fecha
+        ? "Último ingreso: " + fila.ultima_fecha
+        : "Nunca registró ingreso (seguimiento desde " + fila.fecha_inicio_seguimiento + ")";
+    return tiempo + " sin registrar · " + ultimo;
+}
+
+function detalleInactividad(fila) {
+    if (!fila || fila.estado !== "SIN REGISTRO") return "";
+    const dato = inactividadActual.get(String(fila.dni));
+    if (!dato) return "";
+    return '<small class="tiempo-sin-registro">' +
+        escaparHTML(textoInactividad(dato)) +
+        (dato.alerta ? ' <strong class="marca-inactividad">Más de 14 días computables</strong>' : '') +
+        '</small>';
+}
+
+async function cargarInactividad(fechaReferencia, departamento, grado) {
+    inactividadActual = new Map();
+    alertasActuales = [];
+    const caja = document.getElementById("alertasInactividad");
+    caja.hidden = true;
+    try {
+        const {data,error} = await sb.rpc("admin_consultar_inactividad", {
+            p_token: obtenerAdminToken(),
+            p_device_id: obtenerDeviceId(),
+            p_departamento_id: departamento,
+            p_grado: grado,
+            p_fecha: fechaReferencia
+        });
+        if (error || !data?.ok) throw error || new Error(data?.error || "Sin datos");
+        for (const fila of data.datos || []) {
+            inactividadActual.set(String(fila.dni), fila);
+        }
+        alertasActuales = (data.datos || []).filter(x => x.alerta);
+        if (!alertasActuales.length) return;
+        document.getElementById("resumenInactividad").textContent =
+            alertasActuales.length + " persona(s) llevan más de 14 días computables sin ingresar. Enero, febrero, julio y agosto no cuentan.";
+        const detalle = document.getElementById("detalleAlertasInactividad");
+        detalle.innerHTML = alertasActuales.map(x =>
+            '<div class="alerta-persona"><strong>' +
+            escaparHTML(x.apellido + ", " + x.nombre) +
+            '</strong> <span>' + escaparHTML(x.grado || "-") +
+            ' · ' + escaparHTML(x.departamento || "-") +
+            ' · ' + escaparHTML(String(x.dias_computables)) +
+            ' días computables · ' + escaparHTML(textoInactividad(x)) +
+            '</span></div>'
+        ).join("");
+        detalle.hidden = true;
+        document.getElementById("alternarAlertasBtn").textContent = "Ver personas";
+        caja.hidden = false;
+    } catch (error) {
+        console.error("No se pudo consultar inactividad:", error);
+        // No mostrar alertas con datos parciales.
+    }
+}
+
+document.getElementById("alternarAlertasBtn")?.addEventListener("click", () => {
+    const detalle = document.getElementById("detalleAlertasInactividad");
+    detalle.hidden = !detalle.hidden;
+    document.getElementById("alternarAlertasBtn").textContent =
+        detalle.hidden ? "Ver personas" : "Ocultar personas";
+});
 
 // ======================================================
 // FORMATO HORA
@@ -959,6 +1031,7 @@ function mostrarVistaDia() {
                                         <span class="estado ${claseEstado}">
                                             ${fila.estado}
                                         </span>
+                                        ${detalleInactividad(fila)}
 
                                     </td>
 
@@ -1172,6 +1245,10 @@ function mostrarVistaMes() {
                                     <small>
                                         ${escaparHTML(persona.dni)}
                                     </small>
+                                    ${detalleInactividad({
+                                        dni: persona.dni,
+                                        estado: "SIN REGISTRO"
+                                    })}
 
                                 </td>
 
