@@ -619,12 +619,10 @@ buscarBtn.addEventListener(
 
 function textoInactividad(fila) {
     if (!fila) return "";
+    if (!fila.ultima_fecha) return "No está registrado";
     const dias = Number(fila.dias_calendario || 0);
     const tiempo = dias === 1 ? "1 día" : dias + " días";
-    const ultimo = fila.ultima_fecha
-        ? "Último ingreso: " + fila.ultima_fecha
-        : "Nunca registró ingreso (seguimiento desde " + fila.fecha_inicio_seguimiento + ")";
-    return tiempo + " sin registrar · " + ultimo;
+    return tiempo + " sin registrar · Último ingreso: " + fila.ultima_fecha;
 }
 
 function detalleInactividad(fila) {
