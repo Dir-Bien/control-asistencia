@@ -46,7 +46,7 @@ Deno.serve(async (request: Request) => {
     const db = createClient(projectUrl, serviceKey, {
         auth: { persistSession: false }
     });
-    webpush.setVapidDetails("https://dir-bien.github.io", vapidPublic, vapidPrivate);
+    webpush.setVapidDetails("https://dir-bien.github.io", vapidPublic.trim(), vapidPrivate.trim());
 
     try {
         const { data: pendientes, error } = await db
