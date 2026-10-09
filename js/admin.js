@@ -1245,10 +1245,9 @@ function mostrarVistaMes() {
                                     <small>
                                         ${escaparHTML(persona.dni)}
                                     </small>
-                                    ${detalleInactividad({
-                                        dni: persona.dni,
-                                        estado: "SIN REGISTRO"
-                                    })}
+                                    ${Object.values(persona.dias).every(d => d.estado === "SIN REGISTRO")
+                                        ? detalleInactividad({dni: persona.dni, estado: "SIN REGISTRO"})
+                                        : ""}
 
                                 </td>
 
