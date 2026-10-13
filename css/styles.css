@@ -313,3 +313,20 @@ button:disabled {
 .dialogo-recordatorios #confirmarNotificacionesBtn {
   margin-top: 8px;
 }
+
+
+/* Reporte de problemas accesible desde el login */
+.reporte-acceso {margin-top:18px;text-align:center;}
+.btn-reportar-problema {width:auto;min-height:36px;margin:0;padding:7px 11px;background:transparent;color:#475467;font-size:.83rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
+.btn-reportar-problema:hover {color:#172033;background:#f1f4f9;}
+.modal-reporte {width:min(92vw,460px);max-height:88vh;overflow-y:auto;padding:0;border:0;border-radius:17px;color:#172033;background:#fff;box-shadow:0 15px 60px rgba(14,26,45,.25);font-family:inherit;}
+.modal-reporte::backdrop {background:rgba(19,29,45,.6);}
+.contenido-reporte {padding:22px;}
+.cabecera-reporte {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cabecera-reporte h2 {font-size:1.2rem;margin:0;}
+.cerrar-reporte {width:38px;min-height:38px;margin:0;padding:0;background:#f3f5f8;color:#475467;font-size:1.5rem;}
+.contenido-reporte > p {font-size:.87rem;line-height:1.5;color:#667085;margin:12px 0;}
+.contenido-reporte label {font-size:.86rem;}
+.contenido-reporte textarea {width:100%;min-height:98px;resize:vertical;border:1px solid #d5dbe5;border-radius:12px;padding:12px;font:inherit;}
+.contenido-reporte form > button[type=submit] {margin-top:16px;}
+.contenido-reporte .mensaje {font-size:.86rem;line-height:1.5;}
