@@ -675,7 +675,7 @@ async function registrarIngreso() {
 
 
 // ==========================================================
-// EGRESO: el grado AC requiere geolocalización dentro de 50 m.
+// EGRESO: el personal AC requiere geolocalización dentro de 100 m.
 // La validación final siempre está del lado de Supabase.
 // ==========================================================
 
@@ -713,9 +713,12 @@ egresoBtn.addEventListener("click", async () => {
         mostrarEstado(estado);
     } catch (error) {
         console.error(error);
-        mensaje(error.name === "NotAllowedError"
+        const detalle = error.name === "NotAllowedError"
             ? "La verificación fue cancelada."
-            : error.message, true);
+            : String(error.message || "No se pudo registrar el egreso.");
+        mensaje(/radio permitido/i.test(detalle)
+            ? detalle + " Si estás en el edificio, activá ubicación precisa, acercate a una ventana y volvé a intentarlo. Si continúa, usá Reportar problema."
+            : detalle, true);
         egresoBtn.disabled = false;
     }
 });
