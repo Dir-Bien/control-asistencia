@@ -14,6 +14,9 @@ const actualizar = document.getElementById("manualActualizarBtn");
 
 let manualDisponible = false;
 let manualOcupado = false;
+let personasManual = [];
+let ingresosHoy = new Map();
+let manualesHoy = new Map();
 
 const html = (v) => String(v ?? "").replace(/[&<>"']/g,
     (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -46,7 +49,7 @@ function vista(index) {
     });
     track.style.setProperty("--vista-activa", String(index));
     if (index === 1 && typeof cargarEmpleados === "function") void cargarEmpleados();
-    if (index === 2) void mostrarHistorial();
+    if (index === 2) void cargarTablaCompleta();
 }
 
 nav.forEach(btn => btn.addEventListener("click", () => vista(Number(btn.dataset.vista))));
@@ -91,6 +94,7 @@ window.adminManualActualizarPermisos = async function () {
         manualTab.disabled = false;
         manualTab.title = "Administrar ingresos manuales";
         pintarHistorial(data.datos || []);
+        void cargarTablaCompleta();
         aviso("Acceso autorizado. Las entradas se registran con la hora del servidor.");
     } catch (e) {
         bloquearManual(e.message);
@@ -119,57 +123,97 @@ async function mostrarHistorial() {
     } catch (e) { aviso(e.message, true); }
 }
 
-async function buscarPersonas() {
-    if (!manualDisponible) return;
-    const busqueda = input.value.trim();
-    if (busqueda.length < 2) {
-        aviso("Escribí al menos dos caracteres para buscar.", true);
-        return;
-    }
-    buscar.disabled = true;
-    try {
-        const data = await rpc("buscar", {busqueda});
-        const personas = data.datos || [];
-        resultados.innerHTML = personas.length
-            ? personas.map(p => '<div class="manual-persona"><div><strong>' +
-              html(p.apellido) + ', ' + html(p.nombre) +
-              '</strong><small>' + html(p.grado || "-") + ' · DNI ' + html(p.dni) +
-              '</small>' + (p.entrada ? '<small class="estado-manual">Ya ingresó: ' +
-              html(formatoFecha(p.entrada)) + ' (' + html(p.origen || "CELULAR") + ')</small>' : '') +
-              '</div><button type="button" data-crear="' + Number(p.id) + '"' +
-              (p.entrada ? ' disabled' : '') +
-              '>' + (p.entrada ? 'Ya registrado' : 'Registrar ahora') +
-              '</button></div>').join("")
-            : '<p>No se encontraron empleados activos con esa búsqueda.</p>';
-        aviso(personas.length + " coincidencia(s).");
-    } catch (e) { aviso(e.message, true); }
-    finally { buscar.disabled = false; }
+
+function pintarTablaCompleta() {
+    const q = input.value.trim().toLocaleLowerCase("es-AR");
+    const filtro = document.getElementById("manualEstadoFiltro")?.value || "todos";
+    const filas = personasManual.filter(p => {
+        const ultimo = ingresosHoy.get(String(p.dni));
+        const manual = manualesHoy.get(String(p.dni));
+        const entrada = ultimo?.entrada || manual?.entrada;
+        const origen = manual ? "MANUAL" : (entrada ? "CELULAR" : null);
+        if (q && ![p.dni,p.apellido,p.nombre,p.departamento].some(v => String(v||"").toLocaleLowerCase("es-AR").includes(q))) return false;
+        if (filtro === "sin-ingreso" && (entrada || !p.activo)) return false;
+        if (filtro === "registrado" && !entrada) return false;
+        if (filtro === "manual" && origen !== "MANUAL") return false;
+        return true;
+    });
+    resultados.innerHTML = filas.map(p => {
+        const ultimo = ingresosHoy.get(String(p.dni));
+        const manual = manualesHoy.get(String(p.dni));
+        const entrada = ultimo?.entrada || manual?.entrada;
+        const estado = !p.activo ? "INACTIVO" : !entrada ? "SIN INGRESO" :
+            manual ? (manual.salida ? "COMPLETO · MANUAL" : "INGRESO MANUAL") :
+            ultimo?.estado || "REGISTRADO";
+        const clase = !p.activo || !entrada ? "faltante" : "registrado";
+        return '<tr><td>'+html(p.grado||"-")+'</td><td><strong>'+html(p.apellido)+', '+html(p.nombre)+
+          '</strong></td><td>'+html(p.dni)+'</td><td>'+html(p.departamento||"-")+
+          '</td><td><span class="manual-pill '+clase+'">'+html(estado)+'</span></td><td>'+
+          html(formatoFecha(entrada))+'</td><td>'+
+          (p.activo && !entrada ? '<button type="button" data-crear="'+Number(p.id)+'">Registrar ahora</button>' :
+           manual && !manual.salida ? '<button class="btn-secundario" type="button" data-anular="'+Number(manual.id)+'">Anular manual</button>' :
+           '<span class="manual-sin-accion">'+(!p.activo?"Inactivo":"Ya registrado")+'</span>')+'</td></tr>';
+    }).join("");
+    if (!filas.length) resultados.innerHTML = '<tr><td colspan="7">No se encontraron empleados con esos filtros.</td></tr>';
+    const total=personasManual.filter(p=>p.activo).length;
+    const registrados=personasManual.filter(p=>p.activo && (ingresosHoy.get(String(p.dni))?.entrada || manualesHoy.has(String(p.dni)))).length;
+    const suma=document.getElementById("manualResumen");
+    if(suma) suma.textContent="Personal activo: "+total+" · Con ingreso hoy: "+registrados+
+       " · Sin ingreso: "+(total-registrados)+" · Mostrando: "+filas.length;
 }
 
-buscar?.addEventListener("click", buscarPersonas);
-input?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); void buscarPersonas(); }
-});
+async function cargarTablaCompleta() {
+    if (!manualDisponible) return;
+    buscar.disabled = true;
+    aviso("Actualizando la tabla de personal...");
+    try {
+        const hoy = fechaArgentina();
+        const base={p_token:obtenerAdminToken(),p_device_id:obtenerDeviceId()};
+        const [empleados, reporte, manuales] = await Promise.all([
+            sb.rpc("admin_listar_empleados",{...base,p_busqueda:null}),
+            sb.rpc("admin_reporte_asistencias",{...base,p_desde:hoy,p_hasta:hoy,p_departamento_id:null,p_grado:null}),
+            rpc("listar")
+        ]);
+        if(empleados.error || !empleados.data?.ok) throw new Error(empleados.data?.error||"No se pudo cargar el personal");
+        if(reporte.error || !reporte.data?.ok) throw new Error(reporte.data?.error||"No se pudo cargar el estado de hoy");
+        personasManual=empleados.data.datos||[];
+        ingresosHoy=new Map((reporte.data.datos||[]).map(row=>[String(row.dni),row]));
+        manualesHoy=new Map((manuales.datos||[]).filter(x=>
+            String(x.entrada||"").slice(0,10)===hoy ||
+            new Date(x.entrada).toLocaleDateString("en-CA",{timeZone:"America/Argentina/Buenos_Aires"})===hoy
+        ).map(x=>[String(x.dni),x]));
+        pintarHistorial(manuales.datos||[]);
+        pintarTablaCompleta();
+        aviso("Tabla actualizada. Podés buscar y filtrar sin volver a cargar los datos.");
+    } catch(e) { aviso(e.message,true); }
+    finally { buscar.disabled=false; }
+}
+function buscarPersonas() { pintarTablaCompleta(); }
+buscar?.addEventListener("click", cargarTablaCompleta);
+input?.addEventListener("input", pintarTablaCompleta);
+document.getElementById("manualEstadoFiltro")?.addEventListener("change", pintarTablaCompleta);
 actualizar?.addEventListener("click", mostrarHistorial);
 
 resultados?.addEventListener("click", async e => {
-    const btn = e.target.closest("button[data-crear]");
-    if (!btn || !manualDisponible || manualOcupado) return;
-    const id = Number(btn.dataset.crear);
-    if (!Number.isSafeInteger(id) || id < 1) return;
-    const contenedor = btn.closest(".manual-persona");
-    const nombre = contenedor?.querySelector("strong")?.textContent || "el empleado";
-    if (!confirm("¿Registrar el ingreso de " + nombre + " con la hora actual del servidor?")) return;
-    manualOcupado = true; btn.disabled = true;
+    const crear = e.target.closest("button[data-crear]");
+    const anular = e.target.closest("button[data-anular]");
+    if ((!crear && !anular) || !manualDisponible || manualOcupado) return;
+    const boton = crear || anular;
+    const id = Number(crear ? crear.dataset.crear : anular.dataset.anular);
+    if (!Number.isSafeInteger(id) || id<1) return;
+    const nombre = boton.closest("tr")?.querySelector("strong")?.textContent || "esta persona";
+    const pregunta = crear ? "¿Registrar ahora a "+nombre+" con la hora del servidor?" :
+      "¿Anular la llegada MANUAL de "+nombre+"? El historial se conservará.";
+    if (!confirm(pregunta)) return;
+    manualOcupado=true; boton.disabled=true;
     try {
-        const data = await rpc("crear", {empleadoId:id});
-        aviso("Ingreso manual guardado: " + formatoFecha(data.entrada) + ". Auditoría registrada.");
-        await Promise.all([buscarPersonas(), mostrarHistorial()]);
-        if (typeof cargarReporte === "function") void cargarReporte();
-    } catch (err) { aviso(err.message, true); }
-    finally { manualOcupado = false; btn.disabled = false; }
+        const data = await rpc(crear?"crear":"anular", crear?{empleadoId:id}:{asistenciaId:id});
+        aviso(crear?"Ingreso registrado: "+formatoFecha(data.entrada):"Ingreso manual anulado y auditado.");
+        await cargarTablaCompleta();
+        if(typeof cargarReporte==="function")void cargarReporte();
+    } catch(err) { aviso(err.message,true); }
+    finally { manualOcupado=false; boton.disabled=false; }
 });
-
 historial?.addEventListener("click", async e => {
     const btn = e.target.closest("button[data-anular]");
     if (!btn || !manualDisponible || manualOcupado) return;
