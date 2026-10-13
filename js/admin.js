@@ -1027,7 +1027,7 @@ function mostrarVistaDia() {
                                     <td>
 
                                         <span class="estado ${claseEstado}">
-                                            ${fila.estado}
+                                            ${escaparHTML(fila.estado)}
                                         </span>
                                         ${detalleInactividad(fila)}
 
@@ -2316,22 +2316,22 @@ function mostrarEmpleados() {
                 `
 
                 <td>
-                    ${empleado.grado || "-"}
+                    ${escaparHTML(empleado.grado || "-")}
                 </td>
 
                 <td>
                     <strong>
-                        ${empleado.apellido},
-                        ${empleado.nombre}
+                        ${escaparHTML(empleado.apellido)},
+                        ${escaparHTML(empleado.nombre)}
                     </strong>
                 </td>
 
                 <td>
-                    ${empleado.dni}
+                    ${escaparHTML(empleado.dni)}
                 </td>
 
                 <td>
-                    ${empleado.departamento || "-"}
+                    ${escaparHTML(empleado.departamento || "-")}
                 </td>
 
                 <td>
@@ -2362,21 +2362,21 @@ function mostrarEmpleados() {
 
                     <button
                         class="btn-mini"
-                        onclick="editarEmpleado(${empleado.id})"
+                        onclick="editarEmpleado(${Number(empleado.id)})"
                     >
                         Editar
                     </button>
 
                     <button
                         class="btn-mini btn-reset"
-                        onclick="resetearCelular(${empleado.id})"
+                        onclick="resetearCelular(${Number(empleado.id)})"
                     >
                         Reset celular
                     </button>
 
                     <button
                         class="btn-mini btn-eliminar"
-                        onclick="eliminarEmpleado(${empleado.id})"
+                        onclick="eliminarEmpleado(${Number(empleado.id)})"
                     >
                         Eliminar
                     </button>
@@ -2724,7 +2724,7 @@ window.resetearCelular =
 
         const confirmar =
             confirm(
-                `¿Resetear el celular de ${empleado.apellido}, ${empleado.nombre}?\n\nDespués deberá volver a iniciar sesión y configurar la seguridad del nuevo teléfono.`
+                `¿Resetear el celular de ${escaparHTML(empleado.apellido)}, ${escaparHTML(empleado.nombre)}?\n\nDespués deberá volver a iniciar sesión y configurar la seguridad del nuevo teléfono.`
             );
 
 
@@ -2804,7 +2804,7 @@ window.eliminarEmpleado =
 
         const confirmar =
             confirm(
-                `¿Eliminar a ${empleado.apellido}, ${empleado.nombre}?\n\nEl usuario quedará inactivo pero se conservará su historial de asistencias.`
+                `¿Eliminar a ${escaparHTML(empleado.apellido)}, ${escaparHTML(empleado.nombre)}?\n\nEl usuario quedará inactivo pero se conservará su historial de asistencias.`
             );
 
 
