@@ -15,21 +15,8 @@
       Nunca compartas contraseñas ni códigos con terceros.
     </p>
 
-    <form id="registroForm">
-      <label for="registroDni">DNI</label>
-      <input id="registroDni" inputmode="numeric" required>
-
-      <label for="claveInicial">Clave inicial</label>
-      <input id="claveInicial" autocomplete="one-time-code" required>
-
-      <label for="registroPassword">Creá tu contraseña/PIN</label>
-      <input id="registroPassword" type="password" minlength="6" required>
-
-      <label for="repetirPassword">Repetir contraseña/PIN</label>
-      <input id="repetirPassword" type="password" minlength="6" required>
-
-      <button type="submit">Crear cuenta</button>
-    </form>
+    <p class="notice">La creación de cuentas se realiza desde Administración. Si ya te entregaron tu DNI y contraseña, ingresá desde la pantalla principal.</p>
+    <a class="link" href="index.html">Ir a iniciar sesión</a>
 
     <p id="mensaje" class="mensaje"></p>
     <a class="link" href="index.html">Volver al ingreso</a>
@@ -71,6 +58,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
 <script src="js/reportar-problema.js"></script>
-  <script src="js/auth.js"></script>
+
 </body>
 </html>
