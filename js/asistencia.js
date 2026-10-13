@@ -51,6 +51,7 @@ function mensaje(
 
     mensajeEl.textContent =
         texto;
+    window.registrarMensajeProblema?.(texto, error);
 
     mensajeEl.className =
         error
