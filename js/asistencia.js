@@ -2,7 +2,7 @@ const {
     startRegistration,
     startAuthentication,
     browserSupportsWebAuthn
-} = SimpleWebAuthnBrowser;
+} = window.SimpleWebAuthnBrowser || {};
 
 
 const nombreEl =
@@ -410,7 +410,7 @@ async function configurarWebAuthn() {
     try {
 
         if (
-            !browserSupportsWebAuthn()
+            !browserSupportsWebAuthn || !browserSupportsWebAuthn()
         ) {
 
             throw new Error(
@@ -515,7 +515,7 @@ async function configurarWebAuthn() {
 async function verificarWebAuthn() {
 
     if (
-        !browserSupportsWebAuthn()
+        !browserSupportsWebAuthn || !browserSupportsWebAuthn()
     ) {
 
         throw new Error(
