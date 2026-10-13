@@ -427,7 +427,10 @@
                         <button type="button" id="manualBuscarBtn">Buscar</button>
                     </div>
                     <p id="manualMensaje" class="mensaje" role="status" aria-live="polite"></p>
-                    <div id="manualResultados" class="manual-resultados" aria-live="polite"></div>
+                    <label for="manualEstadoFiltro">Estado de hoy</label>
+                    <select id="manualEstadoFiltro"><option value="todos">Todos</option><option value="sin-ingreso">Sin ingreso</option><option value="registrado">Con ingreso</option><option value="manual">Manual</option></select>
+                    <p id="manualResumen" class="mensaje" aria-live="polite"></p>
+                    <div class="tabla-wrapper"><table><thead><tr><th>Grado</th><th>Apellido y nombre</th><th>DNI</th><th>Departamento</th><th>Estado</th><th>Ingreso</th><th>Acción</th></tr></thead><tbody id="manualResultados"></tbody></table></div>
                     <div class="gestion-header manual-historial-titulo">
                         <div><h3>Historial de ingresos manuales</h3>
                         <p>Se pueden anular los ingresos manuales sin egreso. La auditoría de altas y anulaciones permanece guardada.</p></div>
