@@ -54,7 +54,12 @@ document.addEventListener("DOMContentLoaded",()=>{
    pagina:location.pathname.endsWith("asistencia.html")?"asistencia":
      location.pathname.endsWith("registro.html")?"registro":
      location.pathname.endsWith("bloqueado.html")?"bloqueado":"login",
-   eventos:events.slice()
+   eventos:[
+     ...events.slice(-10),
+     {hora:new Date().toISOString(),tipo:"dispositivo-declarado",
+       mensaje:"Modelo: "+String(data.get("modelo_celular")||"No indicado").slice(0,90)+
+       " | Sistema: "+String(data.get("sistema_celular")||"No indicado").slice(0,80)}
+   ]
   };
   send.disabled=true;status.textContent="Enviando reporte...";
   try {
