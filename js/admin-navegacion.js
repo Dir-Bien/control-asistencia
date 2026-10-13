@@ -9,6 +9,7 @@ function cambiar(index){
   nav.forEach((b,i)=>{b.classList.toggle("seleccionado",i===index);b.setAttribute("aria-current",i===index?"page":"false");});
   views.forEach((v,i)=>{v.setAttribute("aria-hidden",i===index?"false":"true");v.inert=i!==index;});
   track.style.setProperty("--vista-activa",String(index));
+  if(index===1 && typeof cargarEmpleados==="function") void cargarEmpleados();
 }
 nav.forEach(btn=>btn.addEventListener("click",()=>cambiar(Number(btn.dataset.vista))));
 const permiso=setInterval(()=>{
