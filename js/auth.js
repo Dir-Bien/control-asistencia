@@ -17,6 +17,7 @@ const boton =
 function mostrarMensaje(texto, error = false) {
 
     mensajeEl.textContent = texto;
+    window.registrarMensajeProblema?.(texto, error);
 
     mensajeEl.className =
         error
