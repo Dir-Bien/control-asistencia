@@ -120,7 +120,7 @@ async function mostrarHistorial() {
 }
 
 async function buscarPersonas() {
-    if (manualOcupado || !manualDisponible) return;
+    if (!manualDisponible) return;
     const busqueda = input.value.trim();
     if (busqueda.length < 2) {
         aviso("Escribí al menos dos caracteres para buscar.", true);
@@ -189,4 +189,13 @@ historial?.addEventListener("click", async e => {
 
 bloquearManual("Verificando permisos del servidor...");
 vista(0);
+
+// admin.js confirma la sesión de manera asíncrona. Esperar ese dato,
+// sin suponer que el nombre visible equivale a un permiso de escritura.
+const esperaSesion = setInterval(() => {
+    if (typeof adminActual === "undefined" || !adminActual?.usuario) return;
+    clearInterval(esperaSesion);
+    void window.adminManualActualizarPermisos();
+}, 250);
+setTimeout(() => clearInterval(esperaSesion), 15000);
 })();
