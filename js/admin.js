@@ -2724,7 +2724,7 @@ window.resetearCelular =
 
         const confirmar =
             confirm(
-                `¿Resetear el celular de ${escaparHTML(empleado.apellido)}, ${escaparHTML(empleado.nombre)}?\n\nDespués deberá volver a iniciar sesión y configurar la seguridad del nuevo teléfono.`
+                `¿Resetear el celular de ${empleado.apellido}, ${empleado.nombre}?\n\nDespués deberá volver a iniciar sesión y configurar la seguridad del nuevo teléfono.`
             );
 
 
@@ -2804,7 +2804,7 @@ window.eliminarEmpleado =
 
         const confirmar =
             confirm(
-                `¿Eliminar a ${escaparHTML(empleado.apellido)}, ${escaparHTML(empleado.nombre)}?\n\nEl usuario quedará inactivo pero se conservará su historial de asistencias.`
+                `¿Eliminar a ${empleado.apellido}, ${empleado.nombre}?\n\nEl usuario quedará inactivo pero se conservará su historial de asistencias.`
             );
 
 
