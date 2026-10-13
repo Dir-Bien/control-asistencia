@@ -68,7 +68,14 @@ async function comprobarSesion() {
             window.location.replace(
                 "asistencia.html"
             );
+            return;
 
+        }
+
+        // El token guardado puede haber expirado o haberse invalidado
+        // por un nuevo inicio de sesión o un cambio de dispositivo.
+        if (data?.ok === false) {
+            localStorage.removeItem("asistencia_session");
         }
 
     } catch (error) {
