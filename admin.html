@@ -59,10 +59,15 @@
     </header>
 
 
-    <section
-        id="panel"
-        hidden
-    >
+    <section id="panel" hidden>
+        <nav class="admin-navegacion" aria-label="Secciones de administración">
+            <button class="admin-nav-btn seleccionado" type="button" data-vista="0" aria-current="page"><span aria-hidden="true">▦</span> Vista general</button>
+            <button class="admin-nav-btn" type="button" data-vista="1"><span aria-hidden="true">♙</span> Gestión de personal</button>
+            <button class="admin-nav-btn" id="manualTabBtn" type="button" data-vista="2" disabled title="Disponible solo para tjustet"><span aria-hidden="true">＋</span> Ingresos manuales</button>
+        </nav>
+        <div class="admin-ventana-vistas">
+          <div class="admin-carril" id="adminCarril">
+            <div class="admin-vista" id="adminVistaGeneral">
 
         <!-- ===============================
              FILTROS
@@ -311,8 +316,8 @@
 
         <div id="contenidoAsistencias"></div>
 
-        <hr class="separador">
-
+            </div>
+            <div class="admin-vista" id="adminVistaPersonal">
 <section class="gestion-personal">
 
     <div class="gestion-header">
@@ -399,7 +404,32 @@
     </div>
 
 </section>
-
+            </div>
+            <div class="admin-vista" id="adminVistaManual">
+                <section class="gestion-personal admin-manual" aria-labelledby="tituloAdminManual">
+                    <div class="gestion-header">
+                        <div>
+                            <h2 id="tituloAdminManual">Cargar ingresos manualmente</h2>
+                            <p>Buscá un empleado por DNI, apellido o nombre. Al confirmar se registra la hora actual del servidor y queda guardado quién realizó la carga.</p>
+                        </div>
+                    </div>
+                    <p class="manual-aviso">Esta herramienta es exclusiva de tjustet. Un registro manual nunca reemplaza un ingreso realizado desde el celular.</p>
+                    <div class="busqueda-personal">
+                        <input id="manualBusqueda" type="search" placeholder="DNI, apellido o nombre" aria-label="Buscar empleado para registro manual" autocomplete="off">
+                        <button type="button" id="manualBuscarBtn">Buscar</button>
+                    </div>
+                    <p id="manualMensaje" class="mensaje" role="status" aria-live="polite"></p>
+                    <div id="manualResultados" class="manual-resultados" aria-live="polite"></div>
+                    <div class="gestion-header manual-historial-titulo">
+                        <div><h3>Historial de ingresos manuales</h3>
+                        <p>Se pueden anular los ingresos manuales sin egreso. La auditoría de altas y anulaciones permanece guardada.</p></div>
+                        <button type="button" id="manualActualizarBtn" class="btn-secundario">Actualizar</button>
+                    </div>
+                    <div id="manualHistorial" class="tabla-wrapper"></div>
+                </section>
+            </div>
+          </div>
+        </div>
 
 <div
     id="empleadoModal"
@@ -535,6 +565,7 @@
 <script src="js/config.js"></script>
 
 <script src="js/admin.js"></script>
+<script src="js/admin-navegacion.js"></script>
 
 </body>
 
