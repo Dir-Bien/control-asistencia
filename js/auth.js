@@ -321,4 +321,8 @@ formulario.addEventListener(
 );
 
 
+if (new URLSearchParams(window.location.search).get("sesion") === "expirada") {
+    mostrarMensaje("Tu sesión terminó o fue invalidada. Iniciá sesión nuevamente.", true);
+}
+
 comprobarSesion();
