@@ -191,6 +191,10 @@
       </select>
       <label for="dniProblema">DNI (opcional)</label>
       <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
+      <label for="modeloCelularProblema">Modelo de celular (opcional)</label>
+      <input id="modeloCelularProblema" name="modelo_celular" maxlength="90" placeholder="Ej.: iPhone 17, Samsung A54" autocomplete="off">
+      <label for="sistemaCelularProblema">Versión de iOS / Android (opcional)</label>
+      <input id="sistemaCelularProblema" name="sistema_celular" maxlength="80" placeholder="Ej.: iOS 26, Android 16" autocomplete="off">
       <label for="descripcionProblema">¿Qué pasó?</label>
       <textarea id="descripcionProblema" name="descripcion" maxlength="1500" minlength="10" rows="4" required placeholder="Explicá qué estabas haciendo y qué mensaje te apareció. No escribas tu contraseña."></textarea>
       <button type="submit">Enviar reporte</button>
