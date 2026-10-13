@@ -404,6 +404,14 @@
     </div>
 
 </section>
+<section class="gestion-personal auditoria-admin">
+  <div class="gestion-header">
+    <div><h2>Historial de administradores</h2><p>Altas, modificaciones, desactivaciones y registros manuales. Conserva quién hizo cada acción y cuándo.</p></div>
+    <button type="button" id="actualizarAuditoriaBtn" class="btn-secundario">Actualizar historial</button>
+  </div>
+  <p id="auditoriaMensaje" class="mensaje" aria-live="polite"></p>
+  <div id="auditoriaResultados" class="tabla-wrapper"></div>
+</section>
             </div>
             <div class="admin-vista" id="adminVistaManual">
                 <section class="gestion-personal admin-manual" aria-labelledby="tituloAdminManual">
@@ -567,6 +575,7 @@
 <script src="js/admin.js"></script>
 <script src="js/admin-navegacion.js"></script>
 
+<script src="js/admin-auditoria.js"></script>
 </body>
 
 </html>
