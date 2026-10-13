@@ -140,16 +140,17 @@ async function obtenerEstado() {
     }
 
 
-    if (!data?.ok) {
-
-        throw new Error(
-            data?.error
-            ||
-            "Sesión inválida."
-        );
-
+    if (data?.ok === false) {
+        // Nunca mantener un token rechazado: evitar quedar en una pantalla
+        // de asistencia que sólo muestra "Sesión inválida".
+        localStorage.removeItem("asistencia_session");
+        window.location.replace("index.html?sesion=expirada");
+        return null;
     }
 
+    if (!data?.ok) {
+        throw new Error("No se pudo validar la sesión. Intentá nuevamente.");
+    }
 
     return data;
 
@@ -453,6 +454,7 @@ async function configurarWebAuthn() {
         const estado =
             await obtenerEstado();
 
+        if (!estado) return;
 
         mostrarEstado(
             estado
@@ -662,8 +664,9 @@ async function registrarIngreso() {
 
     const estado =
         await obtenerEstado();
-    
-    
+
+    if (!estado) return;
+
     mostrarEstado(
         estado
     );
@@ -706,6 +709,7 @@ egresoBtn.addEventListener("click", async () => {
         }
 
         const estado = await obtenerEstado();
+        if (!estado) return;
         mostrarEstado(estado);
     } catch (error) {
         console.error(error);
