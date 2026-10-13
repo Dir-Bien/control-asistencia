@@ -33,10 +33,44 @@
 
     <p id="mensaje" class="mensaje"></p>
     <a class="link" href="index.html">Volver al ingreso</a>
-  </main>
+  
+    <div class="reporte-acceso"><button id="abrirReporteProblema" type="button" class="btn-reportar-problema">¿Tuviste un problema? Reportalo</button></div>
+</main>
+
+<dialog id="dialogoReporteProblema" class="modal-reporte" aria-labelledby="tituloReporteProblema">
+  <div class="contenido-reporte">
+    <div class="cabecera-reporte">
+      <h2 id="tituloReporteProblema">Reportar un problema</h2>
+      <button id="cerrarReporteProblema" type="button" class="cerrar-reporte" aria-label="Cerrar">×</button>
+    </div>
+    <p>Contanos qué ocurrió. Adjuntaremos automáticamente los últimos mensajes técnicos disponibles en este navegador, sin incluir contraseñas ni ubicación exacta.</p>
+    <form id="formularioReporteProblema">
+      <label for="fechaProblema">¿Cuándo ocurrió?</label>
+      <input id="fechaProblema" name="fecha_problema" type="datetime-local" required>
+      <label for="etapaProblema">¿En qué momento?</label>
+      <select id="etapaProblema" name="etapa" required>
+        <option value="abrir_app">Al abrir la página</option>
+        <option value="login">Al iniciar sesión</option>
+        <option value="ubicacion">Al solicitar ubicación</option>
+        <option value="biometria">Al verificar huella / Face ID / PIN</option>
+        <option value="ingreso">Al registrar ingreso</option>
+        <option value="egreso">Al registrar egreso</option>
+        <option value="otro">Otro</option>
+      </select>
+      <label for="dniProblema">DNI (opcional)</label>
+      <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
+      <label for="descripcionProblema">¿Qué pasó?</label>
+      <textarea id="descripcionProblema" name="descripcion" maxlength="1500" minlength="10" rows="4" required placeholder="Explicá qué estabas haciendo y qué mensaje te apareció. No escribas tu contraseña."></textarea>
+      <button type="submit">Enviar reporte</button>
+      <p id="estadoReporteProblema" class="mensaje" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</dialog>
+
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
+<script src="js/reportar-problema.js"></script>
   <script src="js/auth.js"></script>
 </body>
 </html>
