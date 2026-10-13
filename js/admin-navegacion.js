@@ -12,13 +12,8 @@ function cambiar(index){
   if(index===1 && typeof cargarEmpleados==="function") void cargarEmpleados();
 }
 nav.forEach(btn=>btn.addEventListener("click",()=>cambiar(Number(btn.dataset.vista))));
-const permiso=setInterval(()=>{
-  if(typeof adminActual==="undefined"||!adminActual)return;
-  clearInterval(permiso);
-  // La sección queda bloqueada hasta que el servidor confirme los permisos.
-  manual.disabled=true;
-  manual.title="Carga manual temporalmente deshabilitada hasta validar permisos en Supabase";
-},200);
-setTimeout(()=>clearInterval(permiso),15000);
+// La carga manual se habilitará únicamente después de validar permisos en Supabase.
+manual.disabled=true;
+manual.title="Pendiente de activación segura para tjustet";
 cambiar(0);
 })();
