@@ -154,17 +154,21 @@ function obtenerUbicacion() {
 
                             reject(
                                 new Error(
-                                    "Tenés que permitir la ubicación."
+                                    "La ubicación está bloqueada. En iPhone, abrí Ajustes → Privacidad y seguridad → Localización, activala para Safari y habilitá Ubicación precisa. Volvé a abrir esta página."
                                 )
                             );
+
+                        } else if (error.code === 3) {
+
+                            reject(new Error(
+                                "El GPS tardó demasiado en responder. Activá la ubicación precisa, acercate a una ventana y volvé a intentar."
+                            ));
 
                         } else {
 
-                            reject(
-                                new Error(
-                                    "No se pudo obtener una ubicación válida."
-                                )
-                            );
+                            reject(new Error(
+                                "No se pudo determinar tu ubicación. Comprobá que la localización esté activada, tengas señal y volvé a intentar."
+                            ));
 
                         }
 
@@ -232,4 +236,30 @@ function bloquearPC() {
 
     return false;
 
+}
+
+
+// El navegador integrado de Google en iOS puede impedir WebAuthn.
+// No usarlo para vincular un dispositivo al sistema de asistencia.
+function navegadorIntegradoProblematico() {
+    const agente = navigator.userAgent || "";
+    return /\bGSA\//i.test(agente) && /iPhone|iPad|iPod/i.test(agente);
+}
+
+function explicarErrorWebAuthn(error) {
+    if (navegadorIntegradoProblematico()) {
+        return "El navegador interno de Google no permite completar esta verificación. Abrí el enlace directamente en Safari. Si ya vinculaste tu cuenta en Google, pedí al administrador restablecer el dispositivo para vincularla en Safari.";
+    }
+    if (error?.name === "NotAllowedError") {
+        return "El teléfono no autorizó la verificación. Si cancelaste Face ID o la huella, volvé a intentarlo. En iPhone usá Safari, comprobá que Face ID o el código estén configurados y evitá abrir la página dentro de otra aplicación.";
+    }
+    return String(error?.message || "No se pudo completar la verificación de identidad.");
+}
+
+function explicarErrorUbicacion(error) {
+    const mensaje = String(error?.message || "No se pudo comprobar la ubicación.");
+    if (/fuera del radio permitido/i.test(mensaje)) {
+        return mensaje + " El límite es de 100 metros. Si estás en el establecimiento, activá Ubicación precisa, acercate a una ventana y volvé a intentar. Si continúa, reportá el problema.";
+    }
+    return mensaje;
 }
