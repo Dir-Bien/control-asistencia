@@ -211,6 +211,19 @@ function mostrarEstado(
     egresoBtn.hidden =
         true;
 
+    seguridadBtn.hidden = false;
+
+    // El navegador integrado de la aplicación Google en iOS devuelve
+    // NotAllowedError antes de que aparezca Face ID. No intentar fichar.
+    if (navegadorIntegradoProblematico() && !data.salida) {
+        seguridadBox.hidden = false;
+        seguridadBtn.hidden = true;
+        seguridadTexto.textContent =
+            "Abrí Control de Asistencia desde Safari. El navegador interno de Google impide completar Face ID o el código. Si esta cuenta se vinculó desde Google, administración debe restablecer el dispositivo para asociarla a Safari.";
+        mensaje("Este navegador no permite completar la verificación de seguridad.", true);
+        return;
+    }
+
 
     // ==========================================
     // TODAVÍA NO CONFIGURÓ WEBAUTHN
@@ -477,22 +490,7 @@ async function configurarWebAuthn() {
         console.error(error);
 
 
-        let texto =
-            error.message
-            ||
-            "No se pudo configurar la seguridad.";
-
-
-        if (
-            error.name ===
-            "NotAllowedError"
-        ) {
-
-            texto =
-                "La verificación fue cancelada.";
-
-        }
-
+        const texto = explicarErrorWebAuthn(error);
 
         mensaje(
             texto,
@@ -581,12 +579,7 @@ async function verificarYRegistrarIngreso() {
         console.error(error);
 
 
-        mensaje(
-            error.name === "NotAllowedError"
-                ? "La verificación fue cancelada."
-                : error.message,
-            true
-        );
+        mensaje(explicarErrorWebAuthn(error), true);
 
 
         seguridadBtn.disabled =
@@ -713,12 +706,10 @@ egresoBtn.addEventListener("click", async () => {
         mostrarEstado(estado);
     } catch (error) {
         console.error(error);
-        const detalle = error.name === "NotAllowedError"
-            ? "La verificación fue cancelada."
-            : String(error.message || "No se pudo registrar el egreso.");
-        mensaje(/radio permitido/i.test(detalle)
-            ? detalle + " Si estás en el edificio, activá ubicación precisa, acercate a una ventana y volvé a intentarlo. Si continúa, usá Reportar problema."
-            : detalle, true);
+        const detalle = error?.name === "NotAllowedError"
+            ? explicarErrorWebAuthn(error)
+            : explicarErrorUbicacion(error);
+        mensaje(detalle, true);
         egresoBtn.disabled = false;
     }
 });
