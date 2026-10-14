@@ -13,6 +13,14 @@ const mensajeEl =
 const boton =
     document.getElementById("loginBtn");
 
+const mostrarPasswordBtn = document.getElementById("mostrarPasswordBtn");
+mostrarPasswordBtn?.addEventListener("click", () => {
+    const visible = inputPassword.type === "password";
+    inputPassword.type = visible ? "text" : "password";
+    mostrarPasswordBtn.textContent = visible ? "Ocultar contraseña" : "Mostrar contraseña";
+    mostrarPasswordBtn.setAttribute("aria-pressed", String(visible));
+});
+
 
 function mostrarMensaje(texto, error = false) {
 
@@ -96,6 +104,16 @@ formulario.addEventListener(
 
         event.preventDefault();
 
+
+        // Evita vincular teléfonos a navegadores internos que no soportan
+        // correctamente Face ID/WebAuthn y requieren después un reseteo.
+        if (navegadorIntegradoProblematico()) {
+            mostrarMensaje(
+                "Abrí esta página directamente en Safari, no dentro de la aplicación de Google. Si ya vinculaste tu DNI en Google, pedí a administración que restablezca el dispositivo antes de entrar desde Safari.",
+                true
+            );
+            return;
+        }
 
         // ===============================
         // VALIDAR HTML
@@ -303,8 +321,7 @@ formulario.addEventListener(
 
 
             mostrarMensaje(
-                error.message ||
-                "No se pudo iniciar sesión.",
+                explicarErrorUbicacion(error),
                 true
             );
 
@@ -323,6 +340,10 @@ formulario.addEventListener(
 
 if (new URLSearchParams(window.location.search).get("sesion") === "expirada") {
     mostrarMensaje("Tu sesión terminó o fue invalidada. Iniciá sesión nuevamente.", true);
+}
+
+if (navegadorIntegradoProblematico()) {
+    mostrarMensaje("Para registrar asistencia en iPhone, abrí este enlace directamente en Safari. La aplicación de Google puede impedir Face ID.", true);
 }
 
 comprobarSesion();
