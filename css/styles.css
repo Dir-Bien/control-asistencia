@@ -330,3 +330,25 @@ button:disabled {
 .contenido-reporte textarea {width:100%;min-height:98px;resize:vertical;border:1px solid #d5dbe5;border-radius:12px;padding:12px;font:inherit;}
 .contenido-reporte form > button[type=submit] {margin-top:16px;}
 .contenido-reporte .mensaje {font-size:.86rem;line-height:1.5;}
+
+
+/* Ayuda discreta para escribir correctamente contraseñas en móviles */
+#loginForm .mostrar-password {
+  width: auto;
+  display: block;
+  min-height: 32px;
+  padding: 5px 9px;
+  margin: -5px 0 13px auto;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #31558c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#loginForm .mostrar-password:focus-visible {
+  outline: 2px solid #31558c;
+  outline-offset: 2px;
+}
