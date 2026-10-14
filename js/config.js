@@ -248,10 +248,13 @@ function navegadorIntegradoProblematico() {
 
 function explicarErrorWebAuthn(error) {
     if (navegadorIntegradoProblematico()) {
-        return "El navegador interno de Google no permite completar esta verificación. Abrí el enlace directamente en Safari. Si ya vinculaste tu cuenta en Google, pedí al administrador restablecer el dispositivo para vincularla en Safari.";
+        return "La verificación falló dentro de la aplicación de Google. Abrí el enlace directamente en Safari. Si ya vinculaste tu cuenta en Google, pedí al administrador restablecer el dispositivo para vincularla en Safari.";
     }
     if (error?.name === "NotAllowedError") {
-        return "El teléfono no autorizó la verificación. Si cancelaste Face ID o la huella, volvé a intentarlo. En iPhone usá Safari, comprobá que Face ID o el código estén configurados y evitá abrir la página dentro de otra aplicación.";
+        const iphone = /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+        return iphone
+            ? "El teléfono no autorizó Face ID o la verificación segura. Si cancelaste, volvé a intentarlo. Abrí la página directamente en Safari y comprobá que Face ID o el código estén configurados."
+            : "El teléfono no autorizó la verificación biométrica o el PIN. Si cancelaste, volvé a intentarlo. Comprobá que la seguridad de pantalla esté activada y abrí la página directamente en tu navegador.";
     }
     return String(error?.message || "No se pudo completar la verificación de identidad.");
 }
@@ -259,7 +262,7 @@ function explicarErrorWebAuthn(error) {
 function explicarErrorUbicacion(error) {
     const mensaje = String(error?.message || "No se pudo comprobar la ubicación.");
     if (/fuera del radio permitido/i.test(mensaje)) {
-        return mensaje + " El límite es de 100 metros. Si estás en el establecimiento, activá Ubicación precisa, acercate a una ventana y volvé a intentar. Si continúa, reportá el problema.";
+        return mensaje + " Si estás en el establecimiento, activá Ubicación precisa, acercate a una ventana y volvé a intentar. Si continúa, reportá el problema.";
     }
     return mensaje;
 }
