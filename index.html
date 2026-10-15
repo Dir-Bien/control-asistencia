@@ -117,6 +117,13 @@
       <input id="modeloCelularProblema" name="modelo_celular" maxlength="90" placeholder="Ej.: iPhone 17, Samsung A54" autocomplete="off">
       <label for="sistemaCelularProblema">Versión de iOS / Android (opcional)</label>
       <input id="sistemaCelularProblema" name="sistema_celular" maxlength="80" placeholder="Ej.: iOS 26, Android 16" autocomplete="off">
+      <div id="ubicacionReporteBox" class="ubicacion-reporte-box" hidden>
+        <label class="ubicacion-reporte-permiso">
+          <input type="checkbox" id="aceptarUbicacionReporte" name="aceptar_ubicacion">
+          <span><strong>Compartir mi ubicación para revisar el error (opcional)</strong>
+          Se solicitará permiso al enviar el reporte. Se guardarán las coordenadas, precisión y hora en un registro privado asociado al reporte. No es necesario aceptarlo para enviar el reporte.</span>
+        </label>
+      </div>
       <label for="descripcionProblema">¿Qué pasó?</label>
       <textarea id="descripcionProblema" name="descripcion" maxlength="1500" minlength="10" rows="4" required placeholder="Explicá qué estabas haciendo y qué mensaje te apareció. No escribas tu contraseña."></textarea>
       <button type="submit">Enviar reporte</button>
