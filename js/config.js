@@ -155,7 +155,9 @@ function obtenerUbicacion() {
                             reject(
                                 new Error(
                                     ( /Android/i.test(navigator.userAgent || "")
-                                        ? "La ubicación está bloqueada. En Android, abrí Ajustes → Aplicaciones → " + (/MiuiBrowser|XiaoMi\/MiuiBrowser/i.test(navigator.userAgent || "") ? "Mi Browser" : "tu navegador") + " → Permisos → Ubicación, permití el acceso y habilitá Ubicación precisa. Después, dentro del navegador, abrí los permisos de este sitio y permití la ubicación. Cerrá y volvé a abrir la página. En Xiaomi comprobá también que Ubicación esté activada en Ajustes."
+                                        ? (/MiuiBrowser|XiaoMi\/MiuiBrowser/i.test(navigator.userAgent || "")
+                                            ? "Mi Browser bloqueó la ubicación. Revisá dos permisos: 1) Xiaomi → Ajustes → Ubicación → Permisos de aplicaciones → Mi Browser: elegí Permitir mientras se usa (no Solo esta vez) y Ubicación precisa. 2) Mi Browser → Perfil → Ajustes → Protección de privacidad → Acceder a la ubicación: Preguntar o Permitir. Autorizá este sitio y volvé a intentar. Los nombres pueden variar según MIUI."
+                                            : "La ubicación está bloqueada. En Android, abrí Ajustes → Ubicación → Permisos de aplicaciones → tu navegador, permití la ubicación precisa mientras se usa. Revisá también los permisos de ubicación de este sitio dentro del navegador.")
                                         : /iPhone|iPad|iPod/i.test(navigator.userAgent || "")
                                             ? "La ubicación está bloqueada. En iPhone, abrí Ajustes → Privacidad y seguridad → Localización, habilitá el permiso de Safari y Ubicación precisa. Volvé a intentar."
                                             : "La ubicación está bloqueada. Activá el permiso de ubicación para este sitio en los ajustes del navegador y volvé a intentar." )
