@@ -189,8 +189,9 @@
         <option value="egreso">Al registrar egreso</option>
         <option value="otro">Otro</option>
       </select>
-      <label for="dniProblema">DNI (opcional)</label>
+      <div id="identidadReporte"><label for="dniProblema">DNI del empleado (obligatorio si no iniciaste sesión)</label>
       <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
+      <p id="identidadReporteEstado" class="nota-identidad-reporte">Se verificará que el DNI exista en el registro de personal.</p></div>
       <label for="modeloCelularProblema">Modelo de celular (opcional)</label>
       <input id="modeloCelularProblema" name="modelo_celular" maxlength="90" placeholder="Ej.: iPhone 17, Samsung A54" autocomplete="off">
       <label for="sistemaCelularProblema">Versión de iOS / Android (opcional)</label>
