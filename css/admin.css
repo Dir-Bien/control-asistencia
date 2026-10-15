@@ -1342,3 +1342,17 @@ thead .sticky-col {
 @media(prefers-reduced-motion: reduce) {
   .admin-carril {transition: none;}
 }
+
+/* Historial administrativo en diálogo independiente */
+.admin-header-acciones {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.admin-header-acciones button {width:auto;}
+.admin-header-acciones [hidden] {display:none !important;}
+.admin-historial-dialogo {width:min(96vw,1120px);max-height:88vh;padding:22px;border:0;border-radius:16px;background:white;color:#172033;box-shadow:0 22px 70px #17203344;}
+.admin-historial-dialogo::backdrop {background:#172033aa;}
+.admin-historial-cabecera {display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:20px;}
+.admin-historial-cabecera h2 {margin:0 0 5px;}
+.admin-historial-cabecera p {margin:0;color:#667085;}
+.admin-historial-dialogo .tabla-wrapper {max-height:55vh;overflow:auto;}
+.admin-historial-dialogo .gestion-header {align-items:center;}
+.admin-historial-dialogo .auditoria-admin {padding:0;}
+@media(max-width:600px){.top {align-items:flex-start;flex-wrap:wrap;}.admin-header-acciones{width:100%;}.admin-header-acciones button{flex:1;}.admin-historial-dialogo{padding:14px;}.admin-historial-cabecera{align-items:flex-start;flex-wrap:wrap;}}
