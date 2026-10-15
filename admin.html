@@ -49,12 +49,15 @@
         </div>
 
 
+        <div class="admin-header-acciones">
+            <button id="abrirHistorialBtn" type="button" class="btn-secundario" hidden aria-haspopup="dialog" aria-controls="dialogoHistorialAdmin">Historial</button>
         <button
             id="cerrarSesionBtn"
             class="btn-secundario btn-cerrar"
         >
             Cerrar sesión
         </button>
+        </div>
 
     </header>
 
@@ -404,14 +407,7 @@
     </div>
 
 </section>
-<section class="gestion-personal auditoria-admin">
-  <div class="gestion-header">
-    <div><h2>Historial de administradores</h2><p>Altas, modificaciones, desactivaciones y registros manuales. Conserva quién hizo cada acción y cuándo.</p></div>
-    <button type="button" id="actualizarAuditoriaBtn" class="btn-secundario">Actualizar historial</button>
-  </div>
-  <p id="auditoriaMensaje" class="mensaje" aria-live="polite"></p>
-  <div id="auditoriaResultados" class="tabla-wrapper"></div>
-</section>
+
             </div>
             <div class="admin-vista" id="adminVistaManual">
                 <section class="gestion-personal admin-manual" aria-labelledby="tituloAdminManual">
@@ -442,6 +438,20 @@
           </div>
         </div>
 
+<dialog id="dialogoHistorialAdmin" class="admin-historial-dialogo" aria-labelledby="tituloHistorialAdmin">
+  <div class="admin-historial-cabecera">
+    <div><h2 id="tituloHistorialAdmin">Historial de administradores</h2><p>Movimientos del personal y cargas manuales.</p></div>
+    <button id="cerrarHistorialBtn" type="button" class="btn-secundario">Cerrar</button>
+  </div>
+  <section class="auditoria-admin">
+  <div class="gestion-header">
+    
+    <button type="button" id="actualizarAuditoriaBtn" class="btn-secundario">Actualizar historial</button>
+  </div>
+  <p id="auditoriaMensaje" class="mensaje" aria-live="polite"></p>
+  <div id="auditoriaResultados" class="tabla-wrapper"></div>
+</section>
+</dialog>
 <div
     id="empleadoModal"
     class="modal"
