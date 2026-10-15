@@ -352,3 +352,31 @@ button:disabled {
   outline: 2px solid #31558c;
   outline-offset: 2px;
 }
+
+/* Consentimiento explícito para diagnóstico de geolocalización */
+.ubicacion-reporte-box[hidden] {display:none !important;}
+.ubicacion-reporte-box {
+  margin:14px 0;
+  padding:13px;
+  border:1px solid #d6e2f0;
+  border-radius:12px;
+  background:#f5f9ff;
+}
+.contenido-reporte .ubicacion-reporte-permiso {
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  font-size:.83rem;
+  line-height:1.5;
+  color:#445469;
+  cursor:pointer;
+}
+.ubicacion-reporte-permiso input[type=checkbox] {
+  flex:0 0 auto;
+  width:20px;
+  height:20px;
+  min-height:20px;
+  margin:2px 0 0;
+  accent-color:#204e91;
+}
+.ubicacion-reporte-permiso strong {display:block;color:#1b3557;margin-bottom:4px;}
