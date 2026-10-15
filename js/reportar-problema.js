@@ -105,6 +105,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     (payload.acepta_ubicacion && body.ubicacion_guardada ? " · Ubicación adjuntada." :
       payload.acepta_ubicacion ? " · No se pudo guardar la ubicación." : geoError);
    form.reset();
+   actualizarGeo();
   } catch(err) {
    status.textContent=err.message||"No se pudo enviar el reporte.";
   }finally{send.disabled=false;}
