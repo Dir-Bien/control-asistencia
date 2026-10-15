@@ -1,6 +1,16 @@
 (function () {
 "use strict";
 const button=document.getElementById("actualizarAuditoriaBtn");
+const openBtn=document.getElementById("abrirHistorialBtn");
+const closeBtn=document.getElementById("cerrarHistorialBtn");
+const dialog=document.getElementById("dialogoHistorialAdmin");
+const autorizado=()=>typeof adminActual!=="undefined" && ["tjustet","guari"].includes(adminActual?.usuario);
+const watcher=setInterval(()=>{
+ if(typeof adminActual==="undefined"||!adminActual?.usuario)return;
+ clearInterval(watcher);
+ if(openBtn)openBtn.hidden=!autorizado();
+},250);
+setTimeout(()=>clearInterval(watcher),15000);
 const status=document.getElementById("auditoriaMensaje");
 const destination=document.getElementById("auditoriaResultados");
 const escapeHTML=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -12,7 +22,7 @@ function resumen(v) {
  return Object.entries(obj).map(([k,val])=>k+": "+String(val??"-")).join(" · ");
 }
 async function cargar(){
- if(typeof adminActual==="undefined"||!adminActual?.usuario)return;
+ if(!autorizado())return;
  button.disabled=true;status.textContent="Cargando movimientos...";
  try{
   const {data,error}=await sb.rpc("admin_historial_auditoria",{p_token:obtenerAdminToken(),p_device_id:obtenerDeviceId()});
@@ -27,5 +37,10 @@ async function cargar(){
  finally{button.disabled=false}
 }
 button?.addEventListener("click",cargar);
-document.querySelector('.admin-nav-btn[data-vista="1"]')?.addEventListener("click",()=>void cargar());
+openBtn?.addEventListener("click",()=>{
+ if(!autorizado()||!dialog)return;
+ dialog.showModal();
+ void cargar();
+});
+closeBtn?.addEventListener("click",()=>dialog?.close());
 })();
