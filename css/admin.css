@@ -1356,3 +1356,21 @@ thead .sticky-col {
 .admin-historial-dialogo .gestion-header {align-items:center;}
 .admin-historial-dialogo .auditoria-admin {padding:0;}
 @media(max-width:600px){.top {align-items:flex-start;flex-wrap:wrap;}.admin-header-acciones{width:100%;}.admin-header-acciones button{flex:1;}.admin-historial-dialogo{padding:14px;}.admin-historial-cabecera{align-items:flex-start;flex-wrap:wrap;}}
+
+
+/* Historial: resumen claro de la operación y comparación de campos cambiados */
+.admin-auditoria-vista .audit-detalle {min-width:260px;font-size:13px;}
+.audit-detalle > summary {cursor:pointer;color:#28559b;font-weight:700;white-space:nowrap;padding:5px 0;}
+.audit-detalle[open] {padding:12px 14px;margin:2px 0;background:#f8fafc;border:1px solid #dbe4ef;border-radius:12px;}
+.audit-accion {display:flex;flex-direction:column;gap:4px;border-left:4px solid #2368af;padding:7px 10px;margin:7px 0 10px;background:#eaf2fc;border-radius:0 8px 8px 0;}
+.audit-accion strong {color:#173e70;font-size:14px;}
+.audit-accion span {color:#526174;font-size:12px;line-height:1.45;}
+.audit-persona {margin:7px 0 10px;line-height:1.5;}
+.audit-cantidad {font-weight:700;color:#344054;margin:12px 0 8px;}
+.audit-lista {display:grid;gap:7px;}
+.audit-cambio {display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 11px;background:white;border:1px solid #dce6f3;border-left:3px solid #286bbb;border-radius:8px;line-height:1.5;}
+.audit-campo {flex:0 0 110px;font-size:12px;font-weight:700;color:#344054;}
+.audit-anterior {color:#697586;text-decoration:line-through;overflow-wrap:anywhere;}
+.audit-flecha {color:#667085;font-weight:800;}
+.audit-nuevo {color:#145d45;font-weight:800;overflow-wrap:anywhere;}
+@media(max-width:700px) {.audit-campo {flex-basis:100%;}.audit-detalle[open] {padding:10px;} }
