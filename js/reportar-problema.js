@@ -48,6 +48,16 @@ document.addEventListener("DOMContentLoaded",()=>{
    const now=new Date(),local=new Date(now.getTime()-now.getTimezoneOffset()*60000);
    field.value=local.toISOString().slice(0,16);
   }
+  // Si acaba de fallar el GPS, mostrar directamente la opción de diagnóstico.
+  if (etapa && etapa.value === "abrir_app") {
+    const reciente=events.slice(-6).some(evt =>
+      ["error","mensaje-error"].includes(evt.tipo) &&
+      Date.now()-new Date(evt.hora).getTime()<15*60000 &&
+      /ubicaci[oó]n|localizaci[oó]n|GPS|radio permitido|precisi[oó]n/i.test(evt.mensaje)
+    );
+    if (reciente) etapa.value="ubicacion";
+  }
+  actualizarGeo();
   if(!dialog.open)dialog.showModal();
  });
  cerrar?.addEventListener("click",()=>dialog.close());
@@ -90,7 +100,16 @@ document.addEventListener("DOMContentLoaded",()=>{
         capturada_en:new Date(punto.timestamp).toISOString()
       };
     } catch(error) {
-      geoError=" No se pudo obtener la ubicación; el reporte se enviará sin coordenadas.";
+      const code=Number(error?.code)||0;
+      const razon=code===1?"Permiso denegado":code===2?"Posición no disponible":code===3?"Tiempo de espera agotado":"Sin soporte de ubicación";
+      payload.eventos.push({hora:new Date().toISOString(),tipo:"diagnostico-ubicacion",
+        mensaje:"No se pudo adjuntar GPS: "+razon+" (código "+code+")."});
+      if(!confirm("No se pudo obtener tu ubicación ("+razon+"). ¿Querés enviar el reporte de todas formas, sin coordenadas?")) {
+        status.textContent="Reporte sin enviar. Podés corregir los permisos y volver a intentar.";
+        send.disabled=false;
+        return;
+      }
+      geoError=" No se pudo obtener la ubicación ("+razon+"); el reporte se guardó sin coordenadas.";
     }
   }
   status.textContent="Enviando reporte...";
