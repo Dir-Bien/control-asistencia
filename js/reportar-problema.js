@@ -30,6 +30,17 @@ document.addEventListener("DOMContentLoaded",()=>{
  const cerrar=document.getElementById("cerrarReporteProblema");
  const form=document.getElementById("formularioReporteProblema");
  const status=document.getElementById("estadoReporteProblema");
+ const etapa=form?.querySelector("[name=etapa]");
+ const geoBox=document.getElementById("ubicacionReporteBox");
+ const geoCheck=document.getElementById("aceptarUbicacionReporte");
+ function actualizarGeo() {
+   if (!geoBox) return;
+   const visible=etapa?.value==="ubicacion";
+   geoBox.hidden=!visible;
+   if (!visible && geoCheck) geoCheck.checked=false;
+ }
+ etapa?.addEventListener("change",actualizarGeo);
+ actualizarGeo();
  if(!abrir||!dialog||!form)return;
  abrir.addEventListener("click",()=>{
   const field=form.querySelector("[name=fecha_problema]");
@@ -61,7 +72,28 @@ document.addEventListener("DOMContentLoaded",()=>{
        " | Sistema: "+String(data.get("sistema_celular")||"No indicado").slice(0,80)}
    ]
   };
-  send.disabled=true;status.textContent="Enviando reporte...";
+  send.disabled=true;status.textContent="Preparando reporte...";
+  let geoError="";
+  if(payload.etapa==="ubicacion" && geoCheck?.checked) {
+    try {
+      const punto=await new Promise((resolve,reject)=>{
+        if(!navigator.geolocation) { reject(new Error("Tu navegador no ofrece geolocalización."));return;}
+        navigator.geolocation.getCurrentPosition(resolve,reject,{
+          enableHighAccuracy:true,timeout:15000,maximumAge:0
+        });
+      });
+      payload.acepta_ubicacion=true;
+      payload.ubicacion={
+        latitud:punto.coords.latitude,
+        longitud:punto.coords.longitude,
+        precision:punto.coords.accuracy,
+        capturada_en:new Date(punto.timestamp).toISOString()
+      };
+    } catch(error) {
+      geoError=" No se pudo obtener la ubicación; el reporte se enviará sin coordenadas.";
+    }
+  }
+  status.textContent="Enviando reporte...";
   try {
    const res=await fetch(SUPABASE_URL+"/functions/v1/reportar-problema",{
     method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLIC_KEY},
@@ -69,7 +101,9 @@ document.addEventListener("DOMContentLoaded",()=>{
    });
    const body=await res.json();
    if(!res.ok||!body?.ok)throw new Error(body?.error||"No se pudo registrar el problema.");
-   status.textContent="Reporte guardado correctamente. Número: "+body.id;
+   status.textContent="Reporte guardado correctamente. Número: "+body.id+
+    (payload.acepta_ubicacion && body.ubicacion_guardada ? " · Ubicación adjuntada." :
+      payload.acepta_ubicacion ? " · No se pudo guardar la ubicación." : geoError);
    form.reset();
   } catch(err) {
    status.textContent=err.message||"No se pudo enviar el reporte.";
