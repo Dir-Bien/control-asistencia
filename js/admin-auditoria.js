@@ -13,6 +13,10 @@ const watcher=setInterval(()=>{
 setTimeout(()=>clearInterval(watcher),15000);
 const status=document.getElementById("auditoriaMensaje");
 const destination=document.getElementById("auditoriaResultados");
+const filtroAccion=document.getElementById("auditoriaFiltroAccion");
+const filtroAdmin=document.getElementById("auditoriaFiltroAdmin");
+const filtroEmpleado=document.getElementById("auditoriaFiltroEmpleado");
+let historialFilas=[];
 const escapeHTML=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function when(v){try{return new Intl.DateTimeFormat("es-AR",{timeZone:"America/Argentina/Buenos_Aires",dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return "-"}}
 function resumen(v) {
