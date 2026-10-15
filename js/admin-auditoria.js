@@ -4,7 +4,7 @@ const button=document.getElementById("actualizarAuditoriaBtn");
 const openBtn=document.getElementById("abrirHistorialBtn");
 const closeBtn=document.getElementById("cerrarHistorialBtn");
 const dialog=document.getElementById("dialogoHistorialAdmin");
-const autorizado=()=>typeof adminActual!=="undefined" && ["tjustet","guari"].includes(adminActual?.usuario);
+const autorizado=()=>typeof adminActual!=="undefined" && Boolean(adminActual?.usuario);
 const watcher=setInterval(()=>{
  if(typeof adminActual==="undefined"||!adminActual?.usuario)return;
  clearInterval(watcher);
