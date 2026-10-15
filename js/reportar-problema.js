@@ -33,6 +33,26 @@ document.addEventListener("DOMContentLoaded",()=>{
  const etapa=form?.querySelector("[name=etapa]");
  const geoBox=document.getElementById("ubicacionReporteBox");
  const geoCheck=document.getElementById("aceptarUbicacionReporte");
+ const identidad=document.getElementById("identidadReporte");
+ const identidadEstado=document.getElementById("identidadReporteEstado");
+ const dniInput=document.getElementById("dniProblema");
+ let sesionReporte=null;
+ async function actualizarIdentidad() {
+   sesionReporte=null;
+   if(identidad) identidad.hidden=false;
+   if(dniInput){dniInput.readOnly=false;dniInput.required=true;}
+   if(identidadEstado) identidadEstado.textContent="Se verificará que el DNI exista en el registro de personal.";
+   const token=obtenerTokenSesion?.();
+   if(!token)return;
+   try {
+     const device=obtenerDeviceId();
+     const {data,error}=await sb.rpc("mi_estado_seguro",{p_token:token,p_device_id:device});
+     if(error||!data?.ok)return;
+     sesionReporte={token,device};
+     if(dniInput){dniInput.value=String(data.dni||"");dniInput.readOnly=true;dniInput.required=false;}
+     if(identidadEstado)identidadEstado.textContent="Identificado por sesión: "+String(data.apellido||"")+", "+String(data.nombre||"")+". El servidor verificará la sesión.";
+   }catch(e){ /* Permitir informar DNI manual si la sesión ya no es válida. */ }
+ }
  function actualizarGeo() {
    if (!geoBox) return;
    const visible=etapa?.value==="ubicacion";
@@ -58,6 +78,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if (reciente) etapa.value="ubicacion";
   }
   actualizarGeo();
+  void actualizarIdentidad();
   if(!dialog.open)dialog.showModal();
  });
  cerrar?.addEventListener("click",()=>dialog.close());
@@ -67,11 +88,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   const data=new FormData(form);
   const formDate=new Date(String(data.get("fecha_problema")));
   if(!Number.isFinite(formDate.getTime())){status.textContent="Elegí cuándo ocurrió el problema.";return;}
+  const dniForm=String(data.get("dni")||"").replace(/\D/g,"");
+  if(!sesionReporte && !/^\d{7,9}$/.test(dniForm)){
+    status.textContent="Ingresá tu DNI (entre 7 y 9 números) para enviar el reporte.";
+    return;
+  }
   const payload={
    fecha_problema:formDate.toISOString(),
    etapa:String(data.get("etapa")),
    descripcion:String(data.get("descripcion")).trim(),
-   dni:String(data.get("dni")||"").replace(/\D/g,""),
+   dni:sesionReporte ? "" : dniForm,
+   ...(sesionReporte ? {sesion_token:sesionReporte.token,device_id:sesionReporte.device}:{}),
    pagina:location.pathname.endsWith("asistencia.html")?"asistencia":
      location.pathname.endsWith("registro.html")?"registro":
      location.pathname.endsWith("bloqueado.html")?"bloqueado":"login",
@@ -124,6 +151,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     (payload.acepta_ubicacion && body.ubicacion_guardada ? " · Ubicación adjuntada." :
       payload.acepta_ubicacion ? " · No se pudo guardar la ubicación." : geoError);
    form.reset();
+   sesionReporte=null;
    actualizarGeo();
   } catch(err) {
    status.textContent=err.message||"No se pudo enviar el reporte.";
