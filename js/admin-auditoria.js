@@ -32,11 +32,16 @@ async function cargar(){
   const {data,error}=await sb.rpc("admin_historial_auditoria",{p_token:obtenerAdminToken(),p_device_id:obtenerDeviceId()});
   if(error||!data?.ok)throw new Error(data?.error||"Historial aún no habilitado en Supabase.");
   const rows=data.datos||[];
+  historialFilas=rows;
+  const opciones=(el,lista,titulo)=>{el.innerHTML='<option value="">'+titulo+'</option>'+[...new Set(lista.filter(Boolean))].sort().map(v=>'<option value="'+escapeHTML(v)+'">'+escapeHTML(v)+'</option>').join("");};
+  opciones(filtroAccion,rows.map(r=>r.accion),"Todas las acciones");
+  opciones(filtroAdmin,rows.map(r=>r.usuario),"Todos los administradores");
   destination.innerHTML=rows.length
    ? '<table><thead><tr><th>Fecha</th><th>Administrador</th><th>Acción</th><th>Empleado ID</th><th>Cambios</th></tr></thead><tbody>'+
     rows.map(r=>'<tr><td>'+escapeHTML(when(r.fecha))+'</td><td>'+escapeHTML(r.usuario)+'</td><td>'+escapeHTML(r.accion)+'</td><td>'+escapeHTML(r.empleado_id)+'</td><td><details><summary>Ver detalles</summary><small>Antes: '+escapeHTML(resumen(r.anterior))+'</small><hr><small>Después: '+escapeHTML(resumen(r.nuevo))+'</small></details></td></tr>').join("")+'</tbody></table>'
    : '<p>No hay movimientos registrados todavía.</p>';
   status.textContent=rows.length+" movimiento(s) registrados.";
+  aplicarFiltros();
  }catch(e){status.textContent=e.message||"No se pudo cargar el historial."}
  finally{button.disabled=false}
 }
