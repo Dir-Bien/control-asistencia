@@ -45,6 +45,15 @@ async function cargar(){
  }catch(e){status.textContent=e.message||"No se pudo cargar el historial."}
  finally{button.disabled=false}
 }
+function aplicarFiltros(){
+ const q=(filtroEmpleado?.value||"").trim().toLowerCase();
+ const a=filtroAccion?.value||"",u=filtroAdmin?.value||"";
+ destination.querySelectorAll("tbody tr").forEach((tr,i)=>{
+  const r=historialFilas[i];if(!r)return;
+  const who=[r.empleado_id,r.empleado_nombre,r.empleado_dni,r.anterior?.apellido,r.anterior?.nombre,r.nuevo?.apellido,r.nuevo?.nombre].join(" ").toLowerCase();
+  tr.hidden=!!((a&&r.accion!==a)||(u&&r.usuario!==u)||(q&&!who.includes(q)));
+ });
+}
 button?.addEventListener("click",cargar);
 openBtn?.addEventListener("click",()=>{
  if(!autorizado()||!dialog)return;
