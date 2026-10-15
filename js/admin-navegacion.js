@@ -50,6 +50,7 @@ function vista(index) {
     track.style.setProperty("--vista-activa", String(index));
     if (index === 1 && typeof cargarEmpleados === "function") void cargarEmpleados();
     if (index === 2) void cargarTablaCompleta();
+    if (index === 3 && typeof window.adminHistorialCargar === "function") void window.adminHistorialCargar();
 }
 
 nav.forEach(btn => btn.addEventListener("click", () => vista(Number(btn.dataset.vista))));
