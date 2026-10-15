@@ -54,6 +54,7 @@ function aplicarFiltros(){
   tr.hidden=!!((a&&r.accion!==a)||(u&&r.usuario!==u)||(q&&!who.includes(q)));
  });
 }
+window.adminHistorialCargar = cargar;
 button?.addEventListener("click",cargar);
 openBtn?.addEventListener("click",()=>{
  if(!autorizado()||!dialog)return;
