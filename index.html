@@ -97,7 +97,7 @@
       <h2 id="tituloReporteProblema">Reportar un problema</h2>
       <button id="cerrarReporteProblema" type="button" class="cerrar-reporte" aria-label="Cerrar">×</button>
     </div>
-    <p>Contanos qué ocurrió. Adjuntaremos mensajes técnicos sin contraseñas ni coordenadas. Si elegís reportar un problema de ubicación, podrás autorizar por separado que guardemos tu ubicación exacta para diagnosticarlo.</p>
+    <p>Contanos qué ocurrió. Para enviar un reporte tenés que autorizar la captura y el almacenamiento de tu ubicación actual. Si el GPS falla, se enviará automáticamente un diagnóstico técnico sin coordenadas. Los datos del navegador se adjuntan automáticamente.</p>
     <form id="formularioReporteProblema">
       <label for="fechaProblema">¿Cuándo ocurrió?</label>
       <input id="fechaProblema" name="fecha_problema" type="datetime-local" required>
@@ -114,15 +114,11 @@
       <div id="identidadReporte"><label for="dniProblema">DNI del empleado (obligatorio si no iniciaste sesión)</label>
       <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
       <p id="identidadReporteEstado" class="nota-identidad-reporte">Se verificará que el DNI exista en el registro de personal.</p></div>
-      <label for="modeloCelularProblema">Modelo de celular (opcional)</label>
-      <input id="modeloCelularProblema" name="modelo_celular" maxlength="90" placeholder="Ej.: iPhone 17, Samsung A54" autocomplete="off">
-      <label for="sistemaCelularProblema">Versión de iOS / Android (opcional)</label>
-      <input id="sistemaCelularProblema" name="sistema_celular" maxlength="80" placeholder="Ej.: iOS 26, Android 16" autocomplete="off">
-      <div id="ubicacionReporteBox" class="ubicacion-reporte-box" hidden>
+      <div id="ubicacionReporteBox" class="ubicacion-reporte-box">
         <label class="ubicacion-reporte-permiso">
-          <input type="checkbox" id="aceptarUbicacionReporte" name="aceptar_ubicacion">
-          <span><strong>Compartir mi ubicación para revisar el error (opcional)</strong>
-          Se solicitará permiso al enviar el reporte. Se guardarán las coordenadas, precisión y hora en un registro privado asociado al reporte. No es necesario aceptarlo para enviar el reporte.</span>
+          <input type="checkbox" id="aceptarUbicacionReporte" name="aceptar_ubicacion" required>
+          <span><strong>Autorizo guardar mi ubicación actual junto al reporte (obligatorio)</strong>
+          Al enviar, se solicitará acceso al GPS y se guardarán coordenadas, precisión y hora, asociadas al reporte. Si falla la captura, se enviará automáticamente un diagnóstico sin ubicación.</span>
         </label>
       </div>
       <label for="descripcionProblema">¿Qué pasó?</label>
