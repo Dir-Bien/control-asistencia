@@ -85,7 +85,8 @@ function horaArgentina(
                 "2-digit",
 
             timeZone:
-                "America/Argentina/Buenos_Aires"
+                "America/Argentina/Buenos_Aires",
+            hourCycle: "h23"
 
         }
     ).format(
