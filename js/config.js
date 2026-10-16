@@ -267,8 +267,8 @@ function explicarErrorWebAuthn(error) {
 
 function explicarErrorUbicacion(error) {
     const mensaje = String(error?.message || "No se pudo comprobar la ubicación.");
-    if (/fuera del radio permitido/i.test(mensaje)) {
-        return mensaje + " Si estás en el establecimiento, activá Ubicación precisa, acercate a una ventana y volvé a intentar. Si continúa, reportá el problema.";
+    if (/fuera (?:del radio permitido|de las zonas permitidas)|dentro de una zona permitida/i.test(mensaje)) {
+        return mensaje + " Si estás en una de las dos sedes, activá Ubicación precisa, esperá unos segundos al aire libre o cerca de una ventana y volvé a intentar. El GPS puede mostrarte fuera del radio aunque estés físicamente adentro.";
     }
     return mensaje;
 }
