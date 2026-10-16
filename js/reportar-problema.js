@@ -53,13 +53,7 @@ document.addEventListener("DOMContentLoaded",()=>{
      if(identidadEstado)identidadEstado.textContent="Identificado por sesión: "+String(data.apellido||"")+", "+String(data.nombre||"")+". El servidor verificará la sesión.";
    }catch(e){ /* Permitir informar DNI manual si la sesión ya no es válida. */ }
  }
- function actualizarGeo() {
-   if (!geoBox) return;
-   const visible=etapa?.value==="ubicacion";
-   geoBox.hidden=!visible;
-   if (!visible && geoCheck) geoCheck.checked=false;
- }
- etapa?.addEventListener("change",actualizarGeo);
+ function actualizarGeo(){if(geoBox)geoBox.hidden=false;}
  actualizarGeo();
  if(!abrir||!dialog||!form)return;
  abrir.addEventListener("click",()=>{
@@ -102,44 +96,27 @@ document.addEventListener("DOMContentLoaded",()=>{
    pagina:location.pathname.endsWith("asistencia.html")?"asistencia":
      location.pathname.endsWith("registro.html")?"registro":
      location.pathname.endsWith("bloqueado.html")?"bloqueado":"login",
-   eventos:[
-     ...events.slice(-10),
-     {hora:new Date().toISOString(),tipo:"dispositivo-declarado",
-       mensaje:"Modelo: "+String(data.get("modelo_celular")||"No indicado").slice(0,90)+
-       " | Sistema: "+String(data.get("sistema_celular")||"No indicado").slice(0,80)}
-   ]
+   eventos:events.slice(-10)
   };
-  send.disabled=true;status.textContent="Preparando reporte...";
-  let geoError="";
-  if(payload.etapa==="ubicacion" && geoCheck?.checked) {
-    try {
-      const punto=await new Promise((resolve,reject)=>{
-        if(!navigator.geolocation) { reject(new Error("Tu navegador no ofrece geolocalización."));return;}
-        navigator.geolocation.getCurrentPosition(resolve,reject,{
-          enableHighAccuracy:true,timeout:15000,maximumAge:0
-        });
-      });
-      payload.acepta_ubicacion=true;
-      payload.ubicacion={
-        latitud:punto.coords.latitude,
-        longitud:punto.coords.longitude,
-        precision:punto.coords.accuracy,
-        capturada_en:new Date(punto.timestamp).toISOString()
-      };
-    } catch(error) {
-      const code=Number(error?.code)||0;
-      const razon=code===1?"Permiso denegado":code===2?"Posición no disponible":code===3?"Tiempo de espera agotado":"Sin soporte de ubicación";
-      payload.eventos.push({hora:new Date().toISOString(),tipo:"diagnostico-ubicacion",
-        mensaje:"No se pudo adjuntar GPS: "+razon+" (código "+code+")."});
-      if(!confirm("No se pudo obtener tu ubicación ("+razon+"). ¿Querés enviar el reporte de todas formas, sin coordenadas?")) {
-        status.textContent="Reporte sin enviar. Podés corregir los permisos y volver a intentar.";
-        send.disabled=false;
-        return;
-      }
-      geoError=" No se pudo obtener la ubicación ("+razon+"); el reporte se guardó sin coordenadas.";
-    }
+  if(!geoCheck?.checked){status.textContent="Autorizá el almacenamiento de tu ubicación para enviar el reporte.";return;}
+  payload.acepta_ubicacion=true;
+  send.disabled=true;status.textContent="Obteniendo ubicación actual...";
+  try{
+   const position=await new Promise((resolve,reject)=>{
+    if(!navigator.geolocation){reject({code:0});return;}
+    navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+   });
+   payload.ubicacion={latitud:position.coords.latitude,longitud:position.coords.longitude,precision:position.coords.accuracy,capturada_en:new Date(position.timestamp).toISOString()};
+   status.textContent="Enviando reporte con ubicación...";
+  }catch(error){
+   const code=[1,2,3].includes(Number(error?.code))?Number(error.code):0;
+   const reason=code===1?"Permiso de ubicación denegado":code===2?"Ubicación no disponible":code===3?"Tiempo de espera agotado":"GPS no disponible";
+   payload.diagnostico_gps={codigo:String(code)};
+   payload.eventos.push({hora:new Date().toISOString(),tipo:"diagnostico-ubicacion",mensaje:reason+" (código "+code+")."});
+   payload.descripcion=("Fallo automático al capturar GPS durante un reporte: "+reason+". Descripción original: "+payload.descripcion).slice(0,1500);
+   payload.etapa="ubicacion";
+   status.textContent="GPS falló. Enviando diagnóstico técnico automático...";
   }
-  status.textContent="Enviando reporte...";
   try {
    const res=await fetch(SUPABASE_URL+"/functions/v1/reportar-problema",{
     method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLIC_KEY},
@@ -147,9 +124,9 @@ document.addEventListener("DOMContentLoaded",()=>{
    });
    const body=await res.json();
    if(!res.ok||!body?.ok)throw new Error(body?.error||"No se pudo registrar el problema.");
-   status.textContent="Reporte guardado correctamente. Número: "+body.id+
-    (payload.acepta_ubicacion && body.ubicacion_guardada ? " · Ubicación adjuntada." :
-      payload.acepta_ubicacion ? " · No se pudo guardar la ubicación." : geoError);
+   status.textContent=body.diagnostico_ubicacion
+    ?"No se pudo obtener tu ubicación. Se envió automáticamente el diagnóstico del GPS sin coordenadas. Reporte N.º "+body.id
+    :"Reporte N.º "+body.id+" guardado con tu ubicación actual.";
    form.reset();
    sesionReporte=null;
    actualizarGeo();
