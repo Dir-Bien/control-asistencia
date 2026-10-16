@@ -420,6 +420,7 @@ async function configurarWebAuthn() {
     );
 
 
+    let etapa="biometria";
     try {
 
         if (
@@ -480,6 +481,7 @@ async function configurarWebAuthn() {
 
         if (!estado.entrada) {
 
+            etapa="ubicacion";
             await registrarIngreso();
 
         }
@@ -490,7 +492,7 @@ async function configurarWebAuthn() {
         console.error(error);
 
 
-        const texto = explicarErrorWebAuthn(error);
+        const texto = etapa==="biometria" ? explicarErrorWebAuthn(error) : explicarErrorUbicacion(error);
 
         mensaje(
             texto,
@@ -551,54 +553,43 @@ async function verificarWebAuthn() {
 }
 
 
+async function ubicacionParaFichaje() {
+    mensaje("Comprobando ubicación precisa...");
+    const ubicacion=await obtenerUbicacion();
+    if (!Number.isFinite(ubicacion?.latitud)||!Number.isFinite(ubicacion?.longitud)
+        ||!Number.isFinite(ubicacion?.precision)||ubicacion.precision<=0
+        ||ubicacion.precision>200) {
+        throw new Error("El GPS devolvió una ubicación poco precisa. Activá Ubicación precisa, acercate a una ventana y volvé a intentar.");
+    }
+    return ubicacion;
+}
+
 // ==========================================================
 // INGRESO
 // ==========================================================
 
 async function verificarYRegistrarIngreso() {
-
-    seguridadBtn.disabled =
-        true;
-
-
+    if (seguridadBtn.disabled) return;
+    seguridadBtn.disabled=true;
+    let etapa="ubicacion";
     try {
-
-        mensaje(
-            "Verificando identidad..."
-        );
-
-
+        // No abrir la biometría cuando el teléfono todavía no obtuvo GPS.
+        const ubicacion=await ubicacionParaFichaje();
+        etapa="biometria";
+        mensaje("Verificando identidad...");
         await verificarWebAuthn();
-
-
-        await registrarIngreso();
-
-
+        etapa="registro";
+        await registrarIngreso(ubicacion);
     } catch (error) {
-
         console.error(error);
-
-
-        mensaje(error?.name === "NotAllowedError" ? explicarErrorWebAuthn(error) : explicarErrorUbicacion(error), true);
-
-
-        seguridadBtn.disabled =
-            false;
-
+        mensaje(etapa==="biometria"?explicarErrorWebAuthn(error):explicarErrorUbicacion(error),true);
+        seguridadBtn.disabled=false;
     }
-
 }
 
+async function registrarIngreso(ubicacionPrevia=null) {
 
-async function registrarIngreso() {
-
-    mensaje(
-        "Verificando ubicación..."
-    );
-
-
-    const ubicacion =
-        await obtenerUbicacion();
+    const ubicacion=ubicacionPrevia||await ubicacionParaFichaje();
 
 
     mensaje(
@@ -673,44 +664,38 @@ async function registrarIngreso() {
 // ==========================================================
 
 egresoBtn.addEventListener("click", async () => {
-    egresoBtn.disabled = true;
+    if (egresoBtn.disabled) return;
+    egresoBtn.disabled=true;
+    let etapa="ubicacion";
     try {
+        let latitud=null,longitud=null,precision=null;
+        // Solo AC requiere GPS para egreso. SV mantiene su regla actual.
+        if (String(estadoActual?.grado||"").trim().toUpperCase()==="AC") {
+            const ubicacion=await ubicacionParaFichaje();
+            latitud=ubicacion.latitud;
+            longitud=ubicacion.longitud;
+            precision=ubicacion.precision;
+        }
+        etapa="biometria";
         mensaje("Verificando identidad...");
         await verificarWebAuthn();
-
-        let latitud = null, longitud = null, precision = null;
-        if (String(estadoActual?.grado || "").trim().toUpperCase() === "AC") {
-            mensaje("Verificando ubicación...");
-            const ubicacion = await obtenerUbicacion();
-            latitud = ubicacion.latitud;
-            longitud = ubicacion.longitud;
-            precision = ubicacion.precision;
-        }
-
+        etapa="registro";
         mensaje("Registrando egreso...");
-        const { data, error } = await sb.rpc("registrar_salida_segura", {
-            p_token: obtenerTokenSesion(),
-            p_device_id: obtenerDeviceId(),
-            p_latitud: latitud,
-            p_longitud: longitud,
-            p_precision: precision
+        const {data,error}=await sb.rpc("registrar_salida_segura",{
+            p_token:obtenerTokenSesion(),p_device_id:obtenerDeviceId(),
+            p_latitud:latitud,p_longitud:longitud,p_precision:precision
         });
-
-        if (error || !data?.ok) {
-            if (error) console.error(error);
-            throw new Error(data?.error || "No se pudo registrar el egreso.");
+        if(error||!data?.ok){
+            if(error)console.error(error);
+            throw new Error(data?.error||"No se pudo registrar el egreso.");
         }
-
-        const estado = await obtenerEstado();
+        const estado=await obtenerEstado();
         if (!estado) return;
         mostrarEstado(estado);
-    } catch (error) {
+    } catch(error) {
         console.error(error);
-        const detalle = error?.name === "NotAllowedError"
-            ? explicarErrorWebAuthn(error)
-            : explicarErrorUbicacion(error);
-        mensaje(detalle, true);
-        egresoBtn.disabled = false;
+        mensaje(etapa==="biometria"?explicarErrorWebAuthn(error):explicarErrorUbicacion(error),true);
+        egresoBtn.disabled=false;
     }
 });
 
