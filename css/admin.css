@@ -1374,3 +1374,118 @@ thead .sticky-col {
 .audit-flecha {color:#667085;font-weight:800;}
 .audit-nuevo {color:#145d45;font-weight:800;overflow-wrap:anywhere;}
 @media(max-width:700px) {.audit-campo {flex-basis:100%;}.audit-detalle[open] {padding:10px;} }
+
+
+/* Ajustes de presentación del panel: filtros, tablas, modales y navegación */
+html { color-scheme: light; }
+main, #panel, .admin-vista, .gestion-personal { min-width: 0; }
+.top > div:first-child { min-width: 0; }
+.top h1 { line-height: 1.2; overflow-wrap: anywhere; }
+.top .admin-header-acciones { flex-shrink: 0; }
+button { transition: background-color .16s ease, box-shadow .16s ease; }
+button:not(:disabled):hover { box-shadow: 0 3px 12px rgba(18, 34, 55, .12); }
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, summary:focus-visible {
+  outline: 3px solid rgba(42, 100, 191, .43);
+  outline-offset: 2px;
+}
+input, select { min-width: 0; max-width: 100%; font-family: inherit; color: inherit; }
+input[readonly] { background: #f5f7fb; }
+.mensaje { overflow-wrap: anywhere; line-height: 1.5; }
+.gestion-header > div { min-width: 0; }
+.gestion-header h2, .gestion-header h3 { line-height: 1.25; }
+.gestion-header p { line-height: 1.5; }
+
+/* Distribución uniforme de los filtros; evitar columnas huérfanas */
+.filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.filtros > div { min-width: 0; }
+.filtros label { line-height: 1.4; }
+.boton-filtro button { width: 100%; min-height: 44px; }
+@media (min-width: 1320px) {
+  .filtros { grid-template-columns: repeat(6, minmax(0, 1fr)) minmax(100px, .7fr); }
+}
+
+/* Filtros del historial administrativo, antes sin distribución específica */
+.auditoria-filtros {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(210px, 1.3fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 17px 0 19px;
+}
+.auditoria-filtros label { margin: 0; min-width: 0; line-height: 1.5; }
+.auditoria-filtros label select, .auditoria-filtros label input { margin-top: 7px; }
+.auditoria-filtros button { white-space: nowrap; }
+.admin-auditoria-vista .gestion-header { align-items: flex-start; }
+
+/* Mejorar lectura de tablas extensas sin recortar contenido */
+.tabla-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e5eaf1;
+  border-radius: 11px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.tabla-wrapper table { margin: 0; }
+th, td { vertical-align: middle; line-height: 1.45; }
+td { overflow-wrap: anywhere; }
+th { font-weight: 700; }
+.tabla-wrapper details summary { cursor: pointer; }
+.tabla-wrapper td details { max-width: 100%; }
+.busqueda-personal input { min-width: 0; }
+.manual-persona { min-width: 0; overflow-wrap: anywhere; }
+.admin-manual .manual-aviso { line-height: 1.6; }
+.audit-cambio { min-width: 0; }
+.audit-accion { overflow-wrap: anywhere; }
+
+/* Ventana de alta / edición accesible en pantallas pequeñas */
+.modal { padding: 15px; }
+.modal-contenido {
+  max-height: calc(100dvh - 30px);
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+.modal-acciones button { min-width: 0; }
+.checkbox label { margin: 0; }
+
+@media (max-width: 1100px) {
+  .auditoria-filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filtros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1000px) {
+  .filtros { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 750px) {
+  .top { flex-wrap: wrap; gap: 13px; }
+  .top .admin-header-acciones { flex-shrink: 1; }
+  .gestion-header { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .gestion-personal, .admin-manual { padding: 15px; }
+  .admin-navegacion { width: 100%; }
+  .admin-nav-btn { flex: 1 0 auto; }
+  .busqueda-personal { flex-wrap: wrap; }
+  .busqueda-personal input { flex: 1 1 210px; }
+  .busqueda-personal button { flex: 0 0 auto; }
+  .tabla-wrapper { border-radius: 9px; }
+}
+@media (max-width: 600px) {
+  body { padding: 11px; }
+  .filtros, .auditoria-filtros { grid-template-columns: minmax(0, 1fr); }
+  .auditoria-filtros button, .boton-filtro button { width: 100%; }
+  .resumen { gap: 9px; }
+  .mini-card { min-width: 0; padding: 13px; }
+  .mini-card strong { font-size: 1.38rem; }
+  .top .admin-header-acciones { width: 100%; }
+  .modal { padding: 9px; }
+  .modal-contenido { padding: 17px; max-height: calc(100dvh - 18px); }
+  .busqueda-personal { flex-direction: column; align-items: stretch; }
+  .busqueda-personal input, .busqueda-personal button { width: 100%; flex: auto; }
+  .gestion-header button { max-width: 100%; }
+  select, input { font-size: 16px; } /* Evita el zoom al enfocar en iOS */
+}
+@media (max-width: 360px) {
+  .resumen { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
