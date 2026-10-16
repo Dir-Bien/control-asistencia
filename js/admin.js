@@ -266,6 +266,7 @@ async function comprobarAdmin() {
 
 
         await cargarReporte();
+        if(typeof cargarEmpleados==="function")void cargarEmpleados();
 
 
     } catch (error) {
@@ -2156,23 +2157,27 @@ function exportarPDFMes() {
 // CERRAR SESIÓN
 // ======================================================
 
-cerrarSesionBtn
-    .addEventListener(
-        "click",
-        () => {
-
-            localStorage.removeItem(
-                "admin_session"
-            );
-
-
-            window.location.replace(
-                "admin-login.html"
-            );
-
-        }
-    );
-
+cerrarSesionBtn.addEventListener("click",async()=>{
+ const token=obtenerAdminToken();
+ cerrarSesionBtn.disabled=true;
+ cerrarSesionBtn.textContent="Cerrando sesión...";
+ try{
+  if(token){
+   const {data,error}=await sb.rpc("cerrar_sesion_admin_segura",{
+    p_token:token,p_device_id:obtenerDeviceId()
+   });
+   if(error)throw error;
+   if(data?.ok===false && !/inválida|cerrada/i.test(data.error||""))throw new Error(data.error);
+  }
+  localStorage.removeItem("admin_session");
+  window.location.replace("admin-login.html");
+ }catch(error){
+  console.error("Error al cerrar sesión",error);
+  mensaje("No se pudo cerrar la sesión en el servidor. Comprobá tu conexión y volvé a intentar.",true);
+  cerrarSesionBtn.disabled=false;
+  cerrarSesionBtn.textContent="Cerrar sesión";
+ }
+});
 
 // ======================================================
 // INICIO
@@ -2858,8 +2863,4 @@ window.eliminarEmpleado =
     };
 
 
-// Cargar personal después del panel
-setTimeout(
-    cargarEmpleados,
-    500
-);
+// El personal se carga cuando la sesión administrativa ya está verificada.
