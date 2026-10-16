@@ -11,6 +11,7 @@ const activarRecordatorios = document.getElementById("confirmarNotificacionesBtn
 const estadoRecordatorios = document.getElementById("estadoRecordatorios");
 const guiaAndroid = document.getElementById("guiaAndroid");
 const guiaIOS = document.getElementById("guiaIOS");
+const probarNotificacionBtn=document.getElementById("probarNotificacionBtn");
 
 function pushEsIOS() {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -32,6 +33,7 @@ function mostrarEstadoRecordatorios(tipo, texto) {
     const bloqueados = ["no-disponible", "bloqueado", "instalar-ios", "comprobando", "en-proceso"].includes(tipo);
 
     if (estadoRecordatorios) estadoRecordatorios.textContent = texto;
+    if(probarNotificacionBtn)probarNotificacionBtn.hidden = !("Notification" in window && Notification.permission === "granted" && pushEsCompatible() && (!pushEsIOS() || pushEstaInstalada()));
     if (botonCampana) botonCampana.classList.toggle("activada", activados);
     if (puntoCampana) puntoCampana.hidden = activados;
     if (activarRecordatorios) {
@@ -235,4 +237,25 @@ activarRecordatorios?.addEventListener("click", async () => {
             activarRecordatorios.disabled = false;
         }
     }
+});
+
+
+// Prueba local: verifica la visualización de notificaciones del dispositivo,
+// no simula una entrega Push remota ni modifica asistencias.
+probarNotificacionBtn?.addEventListener("click",async()=>{
+    probarNotificacionBtn.disabled=true;
+    try {
+        if(!pushEsCompatible() || Notification.permission!=="granted")
+            throw new Error("Primero activá el permiso de notificaciones.");
+        if(pushEsIOS()&&!pushEstaInstalada())
+            throw new Error("En iPhone abrí la aplicación desde el ícono de inicio.");
+        const registro=await navigator.serviceWorker.ready;
+        await registro.showNotification("Control de asistencia — prueba",{
+            body:"Si ves este aviso, tu teléfono puede mostrar notificaciones de la aplicación.",
+            tag:"prueba-local-"+Date.now()
+        });
+        if(estadoRecordatorios)estadoRecordatorios.textContent="Prueba local solicitada. Comprobá que aparezca el aviso en tu teléfono. Esto no garantiza la entrega de los recordatorios del servidor.";
+    }catch(error){
+        if(estadoRecordatorios)estadoRecordatorios.textContent=error?.message||"No se pudo mostrar la notificación de prueba.";
+    }finally{probarNotificacionBtn.disabled=false;}
 });
