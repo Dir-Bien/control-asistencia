@@ -63,7 +63,7 @@ function bloquearManual(texto) {
 }
 
 async function rpc(accion, extra = {}) {
-    if (!adminActual || !["tjustet","calisaya","zanela","cabello"].includes(adminActual.usuario)) {
+    if (!adminActual?.usuario) {
         throw new Error("No tenés permisos para cargas manuales.");
     }
     const {data, error} = await sb.rpc("admin_operar_manual", {
@@ -84,7 +84,7 @@ async function rpc(accion, extra = {}) {
 
 // Solo activa el panel cuando la base confirma el permiso de la sesión.
 window.adminManualActualizarPermisos = async function () {
-    if (!adminActual || !["tjustet","calisaya","zanela","cabello"].includes(adminActual.usuario)) {
+    if (!adminActual?.usuario) {
         bloquearManual("Tu usuario no tiene habilitada la carga manual.");
         return;
     }
