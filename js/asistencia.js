@@ -42,6 +42,7 @@ const mensajeEl =
     document.getElementById("mensaje");
 
 let estadoActual = null;
+const reintentarCargaBtn=document.getElementById("reintentarCargaBtn");
 
 
 function mensaje(
@@ -704,36 +705,26 @@ egresoBtn.addEventListener("click", async () => {
 // ==========================================================
 
 async function iniciar() {
-
-    try {
-
-        const estado =
-            await obtenerEstado();
-
-
-        if (!estado) {
-            return;
-        }
-
-
-        mostrarEstado(
-            estado
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-
-        mensaje(
-            error.message,
-            true
-        );
-
+    if(reintentarCargaBtn){
+        reintentarCargaBtn.hidden=true;
+        reintentarCargaBtn.disabled=true;
     }
-
+    try {
+        const estado=await obtenerEstado();
+        if (!estado) return;
+        mostrarEstado(estado);
+    } catch(error){
+        console.error(error);
+        nombreEl.textContent=estadoActual
+            ? nombreEl.textContent
+            : "No se pudo cargar la asistencia";
+        mensaje(error?.message||"No se pudo conectar con el sistema. Volvé a intentar.",true);
+        if(reintentarCargaBtn){
+            reintentarCargaBtn.hidden=false;
+            reintentarCargaBtn.disabled=false;
+        }
+    }
 }
-
+reintentarCargaBtn?.addEventListener("click",()=>void iniciar());
 
 iniciar();
