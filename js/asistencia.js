@@ -579,7 +579,7 @@ async function verificarYRegistrarIngreso() {
         console.error(error);
 
 
-        mensaje(explicarErrorWebAuthn(error), true);
+        mensaje(error?.name === "NotAllowedError" ? explicarErrorWebAuthn(error) : explicarErrorUbicacion(error), true);
 
 
         seguridadBtn.disabled =
@@ -668,7 +668,7 @@ async function registrarIngreso() {
 
 
 // ==========================================================
-// EGRESO: el personal AC requiere geolocalización dentro de 100 m.
+// EGRESO: el personal AC requiere geolocalización en cualquiera de las dos sedes.
 // La validación final siempre está del lado de Supabase.
 // ==========================================================
 
