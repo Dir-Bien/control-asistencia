@@ -380,3 +380,106 @@ button:disabled {
   accent-color:#204e91;
 }
 .ubicacion-reporte-permiso strong {display:block;color:#1b3557;margin-bottom:4px;}
+
+
+/* Ajustes visuales generales y adaptación a pantallas pequeñas */
+html { color-scheme: light; }
+body { min-height: 100dvh; }
+.card { padding: clamp(20px, 5vw, 30px); min-width: 0; }
+.card > .logo {
+  color: #42546f;
+  font-size: .79rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  line-height: 1.5;
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+.card h1 { line-height: 1.2; overflow-wrap: anywhere; }
+.card .subtitle { line-height: 1.55; }
+input, select, textarea { max-width: 100%; font-family: inherit; color: inherit; }
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+button:focus-visible, a:focus-visible {
+  outline: 3px solid rgba(37, 99, 190, .42);
+  outline-offset: 2px;
+}
+input[readonly] { background: #f5f7fb; color: #475467; }
+button { transition: background-color .16s ease, box-shadow .16s ease; }
+button:not(:disabled):hover { box-shadow: 0 3px 12px rgba(20, 32, 60, .13); }
+.mensaje { overflow-wrap: anywhere; line-height: 1.45; }
+.aviso, .notice { overflow-wrap: anywhere; }
+
+/* Datos de ingreso y egreso: tarjetas de lectura rápida */
+.datos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin: 19px 0;
+}
+.dato {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid #e4e9f1;
+  border-radius: 13px;
+  background: #f7f9fc;
+}
+.dato:last-child { grid-column: 1 / -1; }
+.dato span {
+  display: block;
+  font-size: .79rem;
+  font-weight: 600;
+  color: #667085;
+  margin-bottom: 5px;
+}
+.dato strong {
+  display: block;
+  font-size: 1.01rem;
+  line-height: 1.4;
+  color: #172033;
+  overflow-wrap: anywhere;
+}
+.card > .seguridad {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: .79rem;
+  color: #667085;
+}
+#nombre { margin: 0 0 8px; }
+
+/* Formularios extensos en ventanas: evitar recortes y desbordes */
+.modal-reporte {
+  width: min(94vw, 460px);
+  max-height: min(88dvh, 800px);
+  overscroll-behavior: contain;
+}
+.dialogo-recordatorios {
+  width: min(94vw, 420px);
+  max-height: min(88dvh, 750px);
+}
+.contenido-reporte, .dialogo-contenido { overflow-wrap: break-word; }
+.contenido-reporte form { min-width: 0; }
+.contenido-reporte input[type="datetime-local"],
+.contenido-reporte input[type="text"],
+.contenido-reporte select { width: 100%; min-width: 0; }
+.contenido-reporte .ubicacion-reporte-permiso { margin-top: 0; }
+.contenido-reporte .ubicacion-reporte-permiso span { min-width: 0; }
+.reporte-acceso { margin-top: 16px; }
+.btn-reportar-problema { max-width: 100%; line-height: 1.4; }
+
+/* Pantallas reducidas y teclados móviles */
+@media (max-width: 480px) {
+  body { padding: 12px; }
+  .card { border-radius: 16px; padding: 21px 19px; }
+  .card h1 { font-size: clamp(1.35rem, 6vw, 1.65rem); }
+  .contenido-reporte, .dialogo-contenido { padding: 18px 17px; }
+  .modal-reporte { max-height: 92dvh; }
+  .dato { padding: 11px; }
+}
+@media (max-width: 360px) {
+  .cabecera-asistencia .logo { font-size: .72rem; letter-spacing: .045em; }
+  .datos { gap: 8px; }
+  .dato { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
