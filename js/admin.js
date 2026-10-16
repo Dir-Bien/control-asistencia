@@ -620,7 +620,7 @@ buscarBtn.addEventListener(
 
 function textoInactividad(fila) {
     if (!fila) return "";
-    if (!fila.ultima_fecha) return "No está registrado";
+    if (!fila.ultima_fecha) {const dias=Number(fila.dias_calendario||0);return "Todavía no registró ingreso · "+dias+" días desde el inicio de seguimiento";}
     const dias = Number(fila.dias_calendario || 0);
     const tiempo = dias === 1 ? "1 día" : dias + " días";
     return tiempo + " sin registrar · Último ingreso: " + fila.ultima_fecha;
@@ -632,7 +632,7 @@ function detalleInactividad(fila) {
     if (!dato) return "";
     return '<small class="tiempo-sin-registro">' +
         escaparHTML(textoInactividad(dato)) +
-        (dato.alerta ? ' <strong class="marca-inactividad">Más de 14 días computables</strong>' : '') +
+        (dato.alerta ? ' <strong class="marca-inactividad">Seguimiento: más de 14 días computables</strong>' : '') +
         '</small>';
 }
 
@@ -656,7 +656,7 @@ async function cargarInactividad(fechaReferencia, departamento, grado) {
         alertasActuales = (data.datos || []).filter(x => x.alerta);
         if (!alertasActuales.length) return;
         document.getElementById("resumenInactividad").textContent =
-            alertasActuales.length + " persona(s) llevan más de 14 días computables sin ingresar. Enero, febrero, julio y agosto no cuentan.";
+            alertasActuales.length + " persona(s) requieren seguimiento por falta de registros. No se desactiva ni bloquea a nadie automáticamente. Enero, febrero, julio y agosto no cuentan.";
         const detalle = document.getElementById("detalleAlertasInactividad");
         detalle.innerHTML = alertasActuales.map(x =>
             '<div class="alerta-persona"><strong>' +
