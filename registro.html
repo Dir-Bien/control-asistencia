@@ -1,1 +1,67 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Error 503</title></head><body><h1>503 Service Unavailable</h1><p>No se puede establecer conexión con el servicio.</p></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Registro inicial</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Registro inicial</h1>
+
+    <p class="notice">
+      Solicitá al administrador tu clave de activación personal.
+      Nunca compartas contraseñas ni códigos con terceros.
+    </p>
+
+    <p class="notice">La creación de cuentas se realiza desde Administración. Si ya te entregaron tu DNI y contraseña, ingresá desde la pantalla principal.</p>
+    <a class="link" href="index.html">Ir a iniciar sesión</a>
+
+    <p id="mensaje" class="mensaje"></p>
+
+  
+    <div class="reporte-acceso"><button id="abrirReporteProblema" type="button" class="btn-reportar-problema">¿Tuviste un problema? Reportalo</button></div>
+</main>
+
+<dialog id="dialogoReporteProblema" class="modal-reporte" aria-labelledby="tituloReporteProblema">
+  <div class="contenido-reporte">
+    <div class="cabecera-reporte">
+      <h2 id="tituloReporteProblema">Reportar un problema</h2>
+      <button id="cerrarReporteProblema" type="button" class="cerrar-reporte" aria-label="Cerrar">×</button>
+    </div>
+    <p>Contanos qué ocurrió. Adjuntaremos automáticamente los últimos mensajes técnicos disponibles en este navegador, sin incluir contraseñas ni ubicación exacta.</p>
+    <form id="formularioReporteProblema">
+      <label for="fechaProblema">¿Cuándo ocurrió?</label>
+      <input id="fechaProblema" name="fecha_problema" type="datetime-local" required>
+      <label for="etapaProblema">¿En qué momento?</label>
+      <select id="etapaProblema" name="etapa" required>
+        <option value="abrir_app">Al abrir la página</option>
+        <option value="login">Al iniciar sesión</option>
+        <option value="ubicacion">Al solicitar ubicación</option>
+        <option value="biometria">Al verificar huella / Face ID / PIN</option>
+        <option value="ingreso">Al registrar ingreso</option>
+        <option value="egreso">Al registrar egreso</option>
+        <option value="otro">Otro</option>
+      </select>
+      <label for="dniProblema">DNI (opcional)</label>
+      <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
+      <label for="modeloCelularProblema">Modelo de celular (opcional)</label>
+      <input id="modeloCelularProblema" name="modelo_celular" maxlength="90" placeholder="Ej.: iPhone 17, Samsung A54" autocomplete="off">
+      <label for="sistemaCelularProblema">Versión de iOS / Android (opcional)</label>
+      <input id="sistemaCelularProblema" name="sistema_celular" maxlength="80" placeholder="Ej.: iOS 26, Android 16" autocomplete="off">
+      <label for="descripcionProblema">¿Qué pasó?</label>
+      <textarea id="descripcionProblema" name="descripcion" maxlength="1500" minlength="10" rows="4" required placeholder="Explicá qué estabas haciendo y qué mensaje te apareció. No escribas tu contraseña."></textarea>
+      <button type="submit">Enviar reporte</button>
+      <p id="estadoReporteProblema" class="mensaje" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</dialog>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+<script src="js/reportar-problema.js"></script>
+
+</body>
+</html>
