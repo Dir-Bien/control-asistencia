@@ -285,10 +285,20 @@ formulario.addEventListener(
 
             if (!data?.ok) {
 
-                throw new Error(
-                    data?.error ||
-                    "No se pudo iniciar sesión."
-                );
+                const servidor=String(data?.error||"");
+                if (/vinculado a otro dispositivo/i.test(servidor)) {
+                    const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||"");
+                    throw new Error(
+                        "Tu cuenta sigue vinculada a un identificador de dispositivo anterior. " +
+                        "Eso también puede ocurrir en el mismo celular si abriste otro navegador, " +
+                        "una pestaña privada, la web instalada en la pantalla de inicio o se borraron los datos del sitio. " +
+                        (ios ? "Probá abrirla exactamente desde el mismo lugar que usaste la primera vez (Safari o el ícono instalado). " :
+                            "Abrí el mismo navegador y perfil que usaste al registrarte. ") +
+                        "Si ya no podés acceder por ese medio, pedí a Personal que restablezca tu dispositivo. " +
+                        "No es necesario dar de baja tu usuario ni borrar asistencias."
+                    );
+                }
+                throw new Error(servidor||"No se pudo iniciar sesión.");
 
             }
 
@@ -339,7 +349,7 @@ formulario.addEventListener(
 
 
 if (new URLSearchParams(window.location.search).get("sesion") === "expirada") {
-    mostrarMensaje("Tu sesión terminó o fue invalidada. Iniciá sesión nuevamente.", true);
+    mostrarMensaje("Tu sesión venció o fue invalidada. Si aparece un error de dispositivo, abrí el mismo navegador o acceso instalado que usaste al vincularte. Si no funciona, pedí a Personal que restablezca la vinculación.", true);
 }
 
 if (navegadorIntegradoProblematico()) {
