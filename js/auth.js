@@ -37,6 +37,7 @@ function mostrarMensaje(texto, error = false) {
 async function comprobarSesion() {
 
     try {
+        await prepararDeviceId();
 
         const token =
             obtenerTokenSesion();
@@ -177,6 +178,7 @@ formulario.addEventListener(
         }
 
 
+        await prepararDeviceId();
         boton.disabled = true;
 
         boton.textContent =
