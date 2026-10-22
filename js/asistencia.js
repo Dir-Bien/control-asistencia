@@ -706,6 +706,7 @@ egresoBtn.addEventListener("click", async () => {
 // ==========================================================
 
 async function iniciar() {
+    await prepararDeviceId();
     if(reintentarCargaBtn){
         reintentarCargaBtn.hidden=true;
         reintentarCargaBtn.disabled=true;
