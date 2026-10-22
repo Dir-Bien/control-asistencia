@@ -57,6 +57,7 @@ function obtenerDeviceId() {
             "asistencia_device",
             device
         );
+        guardarRespaldoDeviceId(device);
 
     }
 
@@ -65,6 +66,61 @@ function obtenerDeviceId() {
 
 }
 
+
+// Respaldo del identificador del mismo navegador (no sincroniza dispositivos).
+// Si Safari/Chrome pierde solo localStorage, IndexedDB puede permitir recuperarlo.
+// Nunca se crea ni se cambia una vinculación en el servidor con este procedimiento.
+function respaldoDeviceId() {
+    return new Promise(resolve => {
+        if (!("indexedDB" in window)) { resolve(null); return; }
+        let completado=false;
+        const terminar=valor=>{if(!completado){completado=true;resolve(valor);}};
+        try {
+            const open=indexedDB.open("asistencia_dispositivo_local",1);
+            open.onupgradeneeded=()=>{if(!open.result.objectStoreNames.contains("datos"))open.result.createObjectStore("datos");};
+            open.onerror=()=>terminar(null);
+            open.onblocked=()=>terminar(null);
+            open.onsuccess=()=>{
+                const db=open.result;
+                try {
+                    const tx=db.transaction("datos","readonly");
+                    const req=tx.objectStore("datos").get("id");
+                    req.onsuccess=()=>{const v=req.result;db.close();terminar(typeof v==="string"&&/^[a-f0-9]{64}$/.test(v)?v:null);};
+                    req.onerror=()=>{db.close();terminar(null);};
+                }catch(_){db.close();terminar(null);}
+            };
+        }catch(_){terminar(null);}
+    });
+}
+function guardarRespaldoDeviceId(device) {
+    if (!/^[a-f0-9]{64}$/.test(device)||!("indexedDB" in window)) return;
+    try {
+        const open=indexedDB.open("asistencia_dispositivo_local",1);
+        open.onupgradeneeded=()=>{if(!open.result.objectStoreNames.contains("datos"))open.result.createObjectStore("datos");};
+        open.onsuccess=()=>{
+            const db=open.result;
+            try {
+                const tx=db.transaction("datos","readwrite");
+                tx.objectStore("datos").put(device,"id");
+                tx.oncomplete=()=>db.close();
+                tx.onerror=()=>db.close();
+            }catch(_){db.close();}
+        };
+    }catch(_){}
+}
+async function prepararDeviceId() {
+    const actual=localStorage.getItem("asistencia_device");
+    if (actual && /^[a-f0-9]{64}$/.test(actual)) {
+        guardarRespaldoDeviceId(actual);
+        return actual;
+    }
+    const recuperado=await respaldoDeviceId();
+    if (recuperado) {
+        localStorage.setItem("asistencia_device",recuperado);
+        return recuperado;
+    }
+    return obtenerDeviceId();
+}
 
 // ==========================================================
 // SESIÓN
