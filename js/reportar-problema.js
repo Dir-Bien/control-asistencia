@@ -104,9 +104,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   try{
    const position=await new Promise((resolve,reject)=>{
     if(!navigator.geolocation){reject({code:0});return;}
-    navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+    navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:false,timeout:20000,maximumAge:60000});
    });
-   payload.ubicacion={latitud:position.coords.latitude,longitud:position.coords.longitude,precision:position.coords.accuracy,capturada_en:new Date(position.timestamp).toISOString()};
+   payload.ubicacion={latitud:position.coords.latitude,longitud:position.coords.longitude,precision:position.coords.accuracy,capturada_en:new Date().toISOString()};
    status.textContent="Enviando reporte con ubicación...";
   }catch(error){
    const code=[1,2,3].includes(Number(error?.code))?Number(error.code):0;
@@ -118,12 +118,8 @@ document.addEventListener("DOMContentLoaded",()=>{
    status.textContent="GPS falló. Enviando diagnóstico técnico automático...";
   }
   try {
-   const res=await fetch(SUPABASE_URL+"/functions/v1/reportar-problema",{
-    method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLIC_KEY},
-    body:JSON.stringify(payload)
-   });
-   const body=await res.json();
-   if(!res.ok||!body?.ok)throw new Error(body?.error||"No se pudo registrar el problema.");
+   const {data:body,error:envioError}=await sb.rpc("enviar_reporte_web",{p_datos:payload});
+   if(envioError||!body?.ok)throw new Error(body?.error||"No se pudo guardar el reporte. Volvé a intentar.");
    status.textContent=body.diagnostico_ubicacion
     ?"No se pudo obtener tu ubicación. Se envió automáticamente el diagnóstico del GPS sin coordenadas. Reporte N.º "+body.id
     :"Reporte N.º "+body.id+" guardado con tu ubicación actual.";
