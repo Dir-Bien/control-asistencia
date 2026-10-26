@@ -30,7 +30,7 @@
       <h2 id="tituloReporteProblema">Reportar un problema</h2>
       <button id="cerrarReporteProblema" type="button" class="cerrar-reporte" aria-label="Cerrar">×</button>
     </div>
-    <p>Contanos qué ocurrió. Adjuntaremos automáticamente los últimos mensajes técnicos disponibles en este navegador, sin incluir contraseñas ni ubicación exacta.</p>
+    <p>Contanos qué ocurrió. Adjuntaremos los últimos mensajes técnicos del navegador. Si autorizás, se enviarán las coordenadas disponibles aunque sean poco precisas; si el GPS falla, se enviará un diagnóstico sin coordenadas.</p>
     <form id="formularioReporteProblema">
       <label for="fechaProblema">¿Cuándo ocurrió?</label>
       <input id="fechaProblema" name="fecha_problema" type="datetime-local" required>
@@ -44,6 +44,7 @@
         <option value="egreso">Al registrar egreso</option>
         <option value="otro">Otro</option>
       </select>
+      <div id="ubicacionReporteBox" class="ubicacion-reporte-box"><label class="ubicacion-reporte-permiso"><input type="checkbox" id="aceptarUbicacionReporte" name="aceptar_ubicacion" required><span><strong>Autorizo enviar la ubicación que pueda obtener el teléfono.</strong> Si el GPS falla, se enviará un diagnóstico sin coordenadas.</span></label></div>
       <label for="dniProblema">DNI (opcional)</label>
       <input id="dniProblema" name="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" maxlength="9" autocomplete="off" placeholder="Para identificar tu reporte">
       <label for="modeloCelularProblema">Modelo de celular (opcional)</label>
