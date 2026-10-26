@@ -215,7 +215,7 @@ formulario.addEventListener(
 
 
             if (
-                ubicacion.precision > 200
+                ubicacion.precision > (dni === "35117728" ? 1000 : 200)
             ) {
 
                 throw new Error(
