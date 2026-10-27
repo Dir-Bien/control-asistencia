@@ -51,8 +51,8 @@ function mensaje(
 ) {
 
     mensajeEl.textContent =
-        texto;
-    window.registrarMensajeProblema?.(texto, error);
+        error ? mensajeErrorControl(texto, estadoActual?.dni) : texto;
+    window.registrarMensajeProblema?.(mensajeEl.textContent, error);
 
     mensajeEl.className =
         error
