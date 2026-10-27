@@ -329,7 +329,7 @@ button:disabled {
 .contenido-reporte label {font-size:.86rem;}
 .contenido-reporte textarea {width:100%;min-height:98px;resize:vertical;border:1px solid #d5dbe5;border-radius:12px;padding:12px;font:inherit;}
 .contenido-reporte form > button[type=submit] {margin-top:16px;}
-.contenido-reporte .mensaje {font-size:.86rem;line-height:1.5;}
+.contenido-reporte .mensaje {font-size:.86rem;line-height:1.5;white-space:pre-line;}
 
 
 /* Ayuda discreta para escribir correctamente contraseñas en móviles */
