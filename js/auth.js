@@ -24,8 +24,8 @@ mostrarPasswordBtn?.addEventListener("click", () => {
 
 function mostrarMensaje(texto, error = false) {
 
-    mensajeEl.textContent = texto;
-    window.registrarMensajeProblema?.(texto, error);
+    mensajeEl.textContent = error ? mensajeErrorControl(texto, inputDni?.value) : texto;
+    window.registrarMensajeProblema?.(mensajeEl.textContent, error);
 
     mensajeEl.className =
         error
