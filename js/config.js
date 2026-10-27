@@ -328,3 +328,71 @@ function explicarErrorUbicacion(error) {
     }
     return mensaje;
 }
+
+
+ // Códigos estables para soporte. 99 identifica errores nuevos o no clasificados.
+const CATALOGO_ERRORES_CONTROL = Object.freeze([
+    [1, /vinculad[oa] a otro dispositivo|otro tel[eé]fono|dispositivo anterior/i],
+    [2, /sesi[oó]n (?:inv[aá]lida|venci[oó]|vencida|expirada|caducada|fue invalidada)|token rechazado/i],
+    [3, /dni o contrase[nñ]a incorrectos|credenciales incorrectas|contrase[nñ]a incorrecta/i],
+    [4, /cuenta bloqueada|bloquead[oa] temporalmente/i],
+    [5, /ubicaci[oó]n (?:bloqueada|denegada)|permiso de ubicaci[oó]n|localizaci[oó]n est[aá] bloqueada|no autoriz[oó] la ubicaci[oó]n/i],
+    [6, /(?:ubicaci[oó]n|gps).*(?:poco precisa|insuficiente precisi[oó]n|no .*precisa)|precisi[oó]n de la ubicaci[oó]n es insuficiente|no es suficientemente precisa/i],
+    [7, /gps tard[oó] demasiado|tiempo de espera|timeout|timed out/i],
+    [8, /no se pudo (?:determinar|obtener|comprobar) (?:tu |la )?ubicaci[oó]n|gps no disponible|ubicaci[oó]n no disponible|no permite obtener ubicaci[oó]n/i],
+    [9, /fuera de las zonas permitidas|fuera del radio permitido|dentro de una zona permitida/i],
+    [10, /datos de ubicaci[oó]n inv[aá]lidos|coordenadas inv[aá]lidas|ubicaci[oó]n inv[aá]lida/i],
+    [11, /no autoriz[oó] (?:face id|la verificaci[oó]n|la biometr[ií]a)|cancelaste.*verificaci[oó]n|notallowederror/i],
+    [12, /no soporta (?:webauthn|la verificaci[oó]n segura)|navegador no compatible/i],
+    [13, /ten[eé]s que verificar tu identidad|verific[aá] tu identidad|debe configurar la seguridad/i],
+    [14, /no existe un ingreso registrado|sin ingreso registrado/i],
+    [15, /ingreso de hoy ya est[aá] registrado|jornada de hoy ya est[aá] registrada|egreso ya registrado/i],
+    [16, /no se pudo comunicar|no se pudo conectar|error (?:de )?red|failed to fetch|networkerror|respuesta del servidor no es v[aá]lida/i],
+    [17, /ingres[aá] un dni v[aá]lido|dni inv[aá]lido/i],
+    [18, /dispositivo inv[aá]lido|no se pudo vincular|dispositivo no autorizado/i],
+    [19, /navegador integrado|abr[ií].*directamente en safari|aplicaci[oó]n de google.*face id/i],
+    [20, /no se pudo guardar el reporte|no se pudo enviar el reporte/i],
+    [21, /reporte inv[aá]lido|revis[aá] los datos del reporte|fecha del reporte inv[aá]lida/i],
+    [22, /notificaciones|suscripci[oó]n push|aviso en tu tel[eé]fono/i],
+    [23, /no est[aá] autorizado|operaci[oó]n no autorizada|no ten[eé]s permiso/i],
+    [24, /fecha.*(?:[uú]ltimos 7 d[ií]as|inv[aá]lida)|eleg[ií] cu[aá]ndo ocurri[oó]/i],
+    [25, /no se pudo registrar el ingreso/i],
+    [26, /no se pudo registrar el egreso/i],
+    [27, /no se pudo completar la verificaci[oó]n de identidad|verificaci[oó]n de seguridad/i],
+    [28, /l[ií]mite de reportes|demasiados reportes|intent[aá] m[aá]s tarde/i],
+    [29, /autoriz[aá].*(?:ubicaci[oó]n|almacenamiento).*reporte/i]
+]);
+
+function codigoErrorControl(texto) {
+    const original = String(texto?.message || texto || "");
+    const yaIncluido = original.match(/^Error\s+(\d{1,3})\s*:/i);
+    if (yaIncluido) return Number(yaIncluido[1]);
+    for (const [numero, patron] of CATALOGO_ERRORES_CONTROL) {
+        if (patron.test(original)) return numero;
+    }
+    return 99;
+}
+
+function formatearErrorControl(texto) {
+    const mensaje = String(texto?.message || texto || "Ocurrió un error inesperado.");
+    if (/^Error\s+\d{1,3}\s*:/i.test(mensaje)) return mensaje;
+    return "Error " + codigoErrorControl(mensaje) + ": " + mensaje;
+}
+
+const GUIA_GPS_MOTOROLA_35117728 =
+    "Motorola: 1) Abrí Ajustes > Ubicación > Servicios de ubicación > Precisión de la ubicación de Google y activá 'Mejorar la precisión de la ubicación'. " +
+    "2) Abrí Ajustes > Aplicaciones > Chrome > Permisos > Ubicación; elegí 'Permitir mientras se usa' y activá 'Usar ubicación precisa'. " +
+    "3) Abrí Ajustes > Batería > Ahorro de batería y desactivalo. Volvé a intentar. " +
+    "(Los nombres de menús pueden variar según la versión de Android.)";
+
+function esFalloGPSControl(texto) {
+    return [5,6,7,8,9,10].includes(codigoErrorControl(texto));
+}
+
+function mensajeErrorControl(texto, dni) {
+    const mensaje = String(texto?.message || texto || "Error desconocido.");
+    const orientado = String(dni || "").replace(/\D/g, "") === "35117728" && esFalloGPSControl(mensaje)
+        ? mensaje + "\n\n" + GUIA_GPS_MOTOROLA_35117728
+        : mensaje;
+    return formatearErrorControl(orientado);
+}
