@@ -145,7 +145,7 @@ function mensaje(
 ) {
 
     mensajeEl.textContent =
-        texto;
+        error ? formatearErrorControl(texto) : texto;
 
 
     mensajeEl.className =
