@@ -73,7 +73,7 @@ async function load(){
   choices(action,entries.map(x=>x.accion),"Todas las acciones");
   choices(admin,entries.map(x=>x.usuario),"Todos los administradores");
   render();
- }catch(e){status.textContent=String(e.message||"Error al cargar historial.");}
+ }catch(e){status.textContent=formatearErrorControl(e.message||"Error al cargar historial.");}
  finally{refresh.disabled=false;}
 }
 window.adminHistorialCargar=load;
