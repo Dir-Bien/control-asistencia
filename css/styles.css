@@ -84,7 +84,7 @@ button:disabled {
   text-align: center;
 }
 
-.mensaje.error { color: #b42318; }
+.mensaje.error { color: #b42318; white-space: pre-line; }
 .mensaje.ok { color: #067647; }
 
 .estado-grid {
