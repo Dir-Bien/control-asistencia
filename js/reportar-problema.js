@@ -81,10 +81,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   const send=form.querySelector("button[type=submit]");
   const data=new FormData(form);
   const formDate=new Date(String(data.get("fecha_problema")));
-  if(!Number.isFinite(formDate.getTime())){status.textContent="Elegí cuándo ocurrió el problema.";return;}
+  if(!Number.isFinite(formDate.getTime())){status.textContent=formatearErrorControl("Elegí cuándo ocurrió el problema.");return;}
   const dniForm=String(data.get("dni")||"").replace(/\D/g,"");
   if(!sesionReporte && !/^\d{7,9}$/.test(dniForm)){
-    status.textContent="Ingresá tu DNI (entre 7 y 9 números) para enviar el reporte.";
+    status.textContent=formatearErrorControl("Ingresá un DNI válido (entre 7 y 9 números) para enviar el reporte.");
     return;
   }
   const payload={
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded",()=>{
      location.pathname.endsWith("bloqueado.html")?"bloqueado":"login",
    eventos:events.slice(-10)
   };
-  if(!geoCheck?.checked){status.textContent="Autorizá el almacenamiento de tu ubicación para enviar el reporte.";return;}
+  if(!geoCheck?.checked){status.textContent=formatearErrorControl("Autorizá el almacenamiento de tu ubicación para enviar el reporte.");return;}
   payload.acepta_ubicacion=true;
   send.disabled=true;status.textContent="Obteniendo ubicación actual...";
   try{
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    sesionReporte=null;
    actualizarGeo();
   } catch(err) {
-   status.textContent=err.message||"No se pudo enviar el reporte.";
+   status.textContent=formatearErrorControl(err.message||"No se pudo enviar el reporte.");
   }finally{send.disabled=false;}
  });
 });
