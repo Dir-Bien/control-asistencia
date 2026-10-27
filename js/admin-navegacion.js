@@ -33,7 +33,7 @@ function formatoFecha(fecha) {
 }
 
 function aviso(texto, error = false) {
-    mensaje.textContent = texto;
+    mensaje.textContent = error ? formatearErrorControl(texto) : texto;
     mensaje.className = error ? "mensaje error" : "mensaje ok";
 }
 
