@@ -42,7 +42,7 @@ async function cargar(){
    : '<p>No hay movimientos registrados todavía.</p>';
   status.textContent=rows.length+" movimiento(s) registrados.";
   aplicarFiltros();
- }catch(e){status.textContent=e.message||"No se pudo cargar el historial."}
+ }catch(e){status.textContent=formatearErrorControl(e.message||"No se pudo cargar el historial.")}
  finally{button.disabled=false}
 }
 function aplicarFiltros(){
