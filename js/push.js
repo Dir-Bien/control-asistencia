@@ -32,7 +32,7 @@ function mostrarEstadoRecordatorios(tipo, texto) {
     const activados = tipo === "activado";
     const bloqueados = ["no-disponible", "bloqueado", "instalar-ios", "comprobando", "en-proceso"].includes(tipo);
 
-    if (estadoRecordatorios) estadoRecordatorios.textContent = texto;
+    if (estadoRecordatorios) estadoRecordatorios.textContent = ["bloqueado", "no-disponible"].includes(tipo) ? formatearErrorControl(texto) : texto;
     if(probarNotificacionBtn)probarNotificacionBtn.hidden = !("Notification" in window && Notification.permission === "granted" && pushEsCompatible() && (!pushEsIOS() || pushEstaInstalada()));
     if (botonCampana) botonCampana.classList.toggle("activada", activados);
     if (puntoCampana) puntoCampana.hidden = activados;
@@ -143,7 +143,7 @@ async function comprobarRecordatorios() {
         console.error("Error comprobando Web Push:", error);
         mostrarEstadoRecordatorios(
             "pendiente",
-            "No se pudo verificar el estado de las notificaciones. Podés volver a intentar activarlas."
+            formatearErrorControl("No se pudo verificar el estado de las notificaciones. Podés volver a intentar activarlas.")
         );
     }
 }
@@ -229,7 +229,7 @@ activarRecordatorios?.addEventListener("click", async () => {
         console.error("No se pudo activar Web Push:", error);
         mostrarEstadoRecordatorios(
             "pendiente",
-            error.message || "No se pudieron activar las notificaciones."
+            formatearErrorControl(error.message || "No se pudieron activar las notificaciones.")
         );
     } finally {
         if (activarRecordatorios && !activarRecordatorios.hidden &&
@@ -256,6 +256,6 @@ probarNotificacionBtn?.addEventListener("click",async()=>{
         });
         if(estadoRecordatorios)estadoRecordatorios.textContent="Prueba local solicitada. Comprobá que aparezca el aviso en tu teléfono. Esto no garantiza la entrega de los recordatorios del servidor.";
     }catch(error){
-        if(estadoRecordatorios)estadoRecordatorios.textContent=error?.message||"No se pudo mostrar la notificación de prueba.";
+        if(estadoRecordatorios)estadoRecordatorios.textContent=formatearErrorControl(error?.message||"No se pudo mostrar la notificación de prueba.");
     }finally{probarNotificacionBtn.disabled=false;}
 });
