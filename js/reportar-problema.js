@@ -120,9 +120,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   try {
    const {data:body,error:envioError}=await sb.rpc("enviar_reporte_web",{p_datos:payload});
    if(envioError||!body?.ok)throw new Error(body?.error||"No se pudo guardar el reporte. Volvé a intentar.");
-   status.textContent=body.diagnostico_ubicacion
-    ?"No se pudo obtener tu ubicación. Se envió automáticamente el diagnóstico del GPS sin coordenadas. Reporte N.º "+body.id
-    :"Reporte N.º "+body.id+" guardado con tu ubicación actual.";
+   const codigoGPS = payload.diagnostico_gps?.codigo === "1" ? 5
+     : payload.diagnostico_gps?.codigo === "3" ? 7 : 8;
+    status.textContent=body.diagnostico_ubicacion
+     ? "Reporte N.º "+body.id+" guardado. Diagnóstico de GPS (Error "+codigoGPS+"): no se pudo obtener la ubicación."
+     : "Reporte N.º "+body.id+" guardado con tu ubicación actual.";
+    if(body.diagnostico_ubicacion && dniForm==="35117728") {
+     status.textContent+="\n\n"+GUIA_GPS_MOTOROLA_35117728;
+    }
    form.reset();
    sesionReporte=null;
    actualizarGeo();
