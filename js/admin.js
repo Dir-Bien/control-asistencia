@@ -2278,11 +2278,7 @@ async function cargarEmpleados() {
 
         console.error(error);
 
-        alert(
-            data?.error
-            ||
-            "No se pudo cargar el personal."
-        );
+        alert(formatearErrorControl(data?.error || "No se pudo cargar el personal."));
 
         return;
 
@@ -2657,11 +2653,7 @@ guardarEmpleadoBtn.addEventListener(
             !data?.ok
         ) {
 
-            alert(
-                data?.error
-                ||
-                "No se pudo guardar."
-            );
+            alert(formatearErrorControl(data?.error || "No se pudo guardar."));
 
             return;
 
@@ -2765,11 +2757,7 @@ window.resetearCelular =
             !data?.ok
         ) {
 
-            alert(
-                data?.error
-                ||
-                "No se pudo resetear."
-            );
+            alert(formatearErrorControl(data?.error || "No se pudo resetear."));
 
             return;
 
@@ -2845,11 +2833,7 @@ window.eliminarEmpleado =
             !data?.ok
         ) {
 
-            alert(
-                data?.error
-                ||
-                "No se pudo eliminar."
-            );
+            alert(formatearErrorControl(data?.error || "No se pudo eliminar."));
 
             return;
 
